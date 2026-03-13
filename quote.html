@@ -1079,14 +1079,19 @@ let modelRotDeg = { x: 0, y: 0, z: 0 };
 let baseVolumeCm3 = null;     // unscaled volume
 let baseDims = null;          // unscaled bounding box in mm { x, y, z }
 let meshDisplayScale = 1;     // the 100/maxDim normalisation factor
+let currentFile = null;       // raw File object for the loaded STL
 
 const materials = {
-  PLA:      { price: 0.05, density: 1.24 },
-  PETG:     { price: 0.07, density: 1.27 },
-  ABS:      { price: 0.06, density: 1.05 },
-  TPU:      { price: 0.10, density: 1.21 },
-  'ABS-GF25': { price: 0.14, density: 1.40 },
-  'PC-CF':    { price: 0.20, density: 1.30 },
+  // Cost basis: QIDI undiscounted retail (USD/kg) × 0.785 USD→GBP ÷ 1000 × density (g/cm³) × 2 (100% markup)
+  // PLA Basic $16.99/kg → £0.033/cm³  | PETG Basic $16.99/kg → £0.034/cm³
+  // ABS Rapido $16.99/kg → £0.028/cm³ | TPU95A-HF $30.59/kg → £0.058/cm³
+  // ABS-GF25 $35.99/kg → £0.079/cm³   | PC-CF (PET-CF proxy) $39.99/kg → £0.082/cm³
+  PLA:        { price: 0.033, density: 1.24 },
+  PETG:       { price: 0.034, density: 1.27 },
+  ABS:        { price: 0.028, density: 1.05 },
+  TPU:        { price: 0.058, density: 1.21 },
+  'ABS-GF25': { price: 0.079, density: 1.40 },
+  'PC-CF':    { price: 0.082, density: 1.30 },
 };
 let currentMaterial = 'PLA';
 let infill = 0.20;
@@ -1579,28 +1584,24 @@ document.getElementById('qtyInput').addEventListener('input', e => setQty(parseI
 const fileInput = document.getElementById('fileInput');
 const dropZone  = document.getElementById('dropZone');
 
-fileInput.addEventListener('change', e => {
-  const f = e.target.files[0];
-  if (f) { document.getElementById('fileName').textContent = f.name; loadFile(f); }
-});
+function handleSTL(f) {
+  if (!f || !f.name.toLowerCase().endsWith('.stl')) return;
+  currentFile = f;
+  currentFileName = f.name;
+  document.getElementById('fileName').textContent = f.name;
+  const r = new FileReader();
+  r.onload = e => loadModel(e.target.result);
+  r.readAsArrayBuffer(f);
+}
 
+fileInput.addEventListener('change', e => handleSTL(e.target.files[0]));
 dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
   dropZone.classList.remove('drag-over');
-  const f = e.dataTransfer.files[0];
-  if (f && f.name.toLowerCase().endsWith('.stl')) {
-    document.getElementById('fileName').textContent = f.name;
-    loadFile(f);
-  }
+  handleSTL(e.dataTransfer.files[0]);
 });
-
-function loadFile(file) {
-  const r = new FileReader();
-  r.onload = e => loadModel(e.target.result);
-  r.readAsArrayBuffer(file);
-}
 
 window.addEventListener('resize', resize);
 
@@ -1635,6 +1636,7 @@ function getCurrentQuoteData() {
     : 'Heavy';
   return {
     name: currentFileName || 'model.stl',
+    file: currentFile,
     material: currentMaterial,
     qty: quantity,
     infill: Math.round(infill * 100),
@@ -1765,11 +1767,58 @@ document.getElementById('cartClear').addEventListener('click', () => {
   if (confirm('Clear all items from the cart?')) { cart = []; renderCart(); }
 });
 
-// Checkout placeholder
-document.getElementById('cartCheckout').addEventListener('click', () => {
-  const total = cartOrderTotal();
-  alert(`Order summary: ${cart.length} line(s), total £${total.toFixed(2)}.\n\nIntegrate your payment or order management system here.`);
+// Checkout — POST order to backend
+document.getElementById('cartCheckout').addEventListener('click', async () => {
+  const btn = document.getElementById('cartCheckout');
+  btn.disabled = true;
+  btn.textContent = 'PLACING ORDER…';
+
+  try {
+    const formData = new FormData();
+    const orderData = {
+      items: cart.map(({ file, ...rest }) => rest),
+      notes: document.getElementById('notesInput').value.trim(),
+      total: cartOrderTotal().toFixed(2),
+    };
+    formData.append('data', JSON.stringify(orderData));
+    cart.forEach((item, i) => {
+      if (item.file) formData.append(`stl_${i}`, item.file, item.name);
+    });
+
+    const res = await fetch('/api/orders', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.orderId) {
+      document.getElementById('cartDrawer').classList.remove('open');
+      cart = [];
+      renderCart();
+      document.getElementById('notesInput').value = '';
+      showOrderConfirmation(data.orderId, orderData.total);
+    } else {
+      throw new Error(data.error || 'Unknown error');
+    }
+  } catch (err) {
+    alert('Order failed: ' + err.message + '\n\nIs the server running? Start it with: node server.js');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'CHECKOUT';
+  }
 });
+
+function showOrderConfirmation(orderId, total) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:999;font-family:var(--mono)';
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--accent);padding:40px;text-align:center;max-width:380px">
+      <div style="font-family:var(--display);font-size:3rem;color:var(--accent);letter-spacing:0.1em">ORDER PLACED</div>
+      <div style="color:var(--muted);font-size:0.65rem;letter-spacing:0.2em;margin:8px 0 20px">// confirmation</div>
+      <div style="font-size:0.8rem;color:#aaa;margin-bottom:6px">Reference</div>
+      <div style="font-family:var(--display);font-size:1.8rem;color:var(--text);letter-spacing:0.15em">#${String(orderId).padStart(5,'0')}</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin:16px 0">Total: £${total}</div>
+      <button onclick="this.closest('div[style]').remove()" style="margin-top:8px;padding:10px 28px;background:var(--accent);border:none;color:#000;font-family:var(--display);font-size:1rem;letter-spacing:0.15em;cursor:pointer">CLOSE</button>
+    </div>`;
+  document.body.appendChild(el);
+}
 
 // Enable add-to-cart once a model is loaded — patched into updateQuote
 const _origUpdateQuote = updateQuote;
@@ -1777,11 +1826,6 @@ updateQuote = function() {
   _origUpdateQuote();
   document.getElementById('addToCartBtn').disabled = (modelVolumeCm3 === null);
 };
-
-// Track current filename for cart labels
-document.getElementById('fileInput').addEventListener('change', e => {
-  if (e.target.files[0]) currentFileName = e.target.files[0].name;
-});
 
 </script>
 </body>
