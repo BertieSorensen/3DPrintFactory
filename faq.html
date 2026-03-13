@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="3DPrintFactory FAQ — everything you need to know about our 3D printing service, materials, delivery, and policies.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self';">
+  <title>FAQ &amp; About — 3DPrintFactory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    main { flex: 1; }
+
+    /* ── Page header ── */
+    .page-hero {
+      padding:    64px 24px 48px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-hero .eyebrow {
+      font-size:      0.62rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color:          var(--accent);
+      margin-bottom:  12px;
+    }
+
+    .page-hero h1 {
+      font-family:    var(--display);
+      font-size:      clamp(2.4rem, 5vw, 4.5rem);
+      letter-spacing: 0.06em;
+      line-height:    1;
+    }
+
+    .page-hero p {
+      font-size:   0.85rem;
+      color:       var(--text-muted);
+      max-width:   520px;
+      margin:      12px auto 0;
+      line-height: 1.7;
+    }
+
+    /* ── Content grid ── */
+    .content-layout {
+      max-width: 1000px;
+      margin:    0 auto;
+      padding:   60px 24px;
+    }
+
+    /* ── Anchored sections ── */
+    .content-section {
+      margin-bottom: 72px;
+      scroll-margin-top: 80px;
+    }
+
+    .content-section-title {
+      font-family:    var(--display);
+      font-size:      2rem;
+      letter-spacing: 0.1em;
+      color:          var(--accent);
+      margin-bottom:  24px;
+      padding-bottom: 12px;
+      border-bottom:  1px solid var(--border);
+    }
+
+    /* ── About ── */
+    .about-grid {
+      display:               grid;
+      grid-template-columns: 1fr 1fr;
+      gap:                   24px;
+    }
+
+    .about-card {
+      background: var(--surface);
+      border:     1px solid var(--border);
+      padding:    24px;
+    }
+
+    .about-card h3 {
+      font-family:    var(--display);
+      font-size:      1.3rem;
+      letter-spacing: 0.08em;
+      margin-bottom:  10px;
+    }
+
+    .about-card p {
+      font-size:   0.78rem;
+      color:       var(--text-muted);
+      line-height: 1.8;
+    }
+
+    @media (max-width: 640px) {
+      .about-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── FAQ accordion ── */
+    .faq-list { list-style: none; }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:first-child { border-top: 1px solid var(--border); }
+
+    .faq-question {
+      width:          100%;
+      background:     none;
+      border:         none;
+      text-align:     left;
+      padding:        18px 40px 18px 0;
+      cursor:         pointer;
+      color:          var(--text);
+      font-family:    var(--mono);
+      font-size:      0.85rem;
+      letter-spacing: 0.04em;
+      position:       relative;
+      line-height:    1.5;
+      transition:     color 0.15s;
+    }
+
+    .faq-question:hover { color: var(--accent); }
+
+    .faq-question::after {
+      content:    '+';
+      position:   absolute;
+      right:      0;
+      top:        50%;
+      transform:  translateY(-50%);
+      font-size:  1.4rem;
+      color:      var(--text-muted);
+      line-height: 1;
+      transition: transform 0.2s, color 0.15s;
+    }
+
+    .faq-item.open .faq-question::after {
+      content:   '−';
+      color:     var(--accent);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow:   hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .faq-item.open .faq-answer { max-height: 600px; }
+
+    .faq-answer-inner {
+      padding:     0 0 18px;
+      font-size:   0.78rem;
+      color:       var(--text-muted);
+      line-height: 1.85;
+    }
+
+    .faq-answer-inner strong { color: var(--text); }
+    .faq-answer-inner a      { color: var(--accent); }
+
+    /* ── Materials table ── */
+    .mat-table {
+      width:           100%;
+      border-collapse: collapse;
+      font-size:       0.78rem;
+      margin-top:      8px;
+    }
+
+    .mat-table th {
+      text-align:     left;
+      font-size:      0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+      padding:        8px 12px;
+      border-bottom:  1px solid var(--border);
+    }
+
+    .mat-table td {
+      padding:       10px 12px;
+      border-bottom: 1px solid var(--border);
+      color:         var(--text-muted);
+      vertical-align: top;
+    }
+
+    .mat-table td:first-child {
+      font-family: var(--display);
+      font-size:   1.1rem;
+      color:       var(--accent);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Contact form ── */
+    .contact-grid {
+      display:               grid;
+      grid-template-columns: 1fr 1fr;
+      gap:                   32px;
+    }
+
+    @media (max-width: 640px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+
+    .contact-info p {
+      font-size:   0.78rem;
+      color:       var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .contact-detail {
+      display:       flex;
+      gap:           10px;
+      align-items:   flex-start;
+      margin-bottom: 12px;
+      font-size:     0.78rem;
+    }
+
+    .contact-detail .icon { flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+    .contact-detail .info { color: var(--text-muted); }
+    .contact-detail .info strong { display: block; color: var(--text); margin-bottom: 2px; }
+
+    .contact-form-panel {
+      background: var(--surface);
+      border:     1px solid var(--border);
+      padding:    28px;
+    }
+
+    /* ── Policy text ── */
+    .policy-text {
+      font-size:   0.78rem;
+      color:       var(--text-muted);
+      line-height: 1.9;
+    }
+
+    .policy-text h3 {
+      font-family:    var(--display);
+      font-size:      1.1rem;
+      letter-spacing: 0.06em;
+      color:          var(--text);
+      margin:         20px 0 8px;
+    }
+
+    .policy-text h3:first-child { margin-top: 0; }
+
+    .policy-text ul {
+      padding-left: 20px;
+      margin:       8px 0;
+    }
+
+    .policy-text li { margin-bottom: 4px; }
+
+    /* ── Success msg ── */
+    #contactSuccess {
+      display:    none;
+      background: rgba(34,170,85,0.08);
+      border:     1px solid var(--success);
+      color:      var(--success);
+      padding:    12px 16px;
+      font-size:  0.78rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    #contactSuccess.visible { display: block; }
+
+    /* ── Nav tabs ── */
+    .section-nav {
+      display:       flex;
+      gap:           0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+      flex-wrap:     wrap;
+    }
+
+    .section-nav a {
+      font-size:      0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+      padding:        10px 18px;
+      border-bottom:  2px solid transparent;
+      margin-bottom:  -1px;
+      transition:     all 0.15s;
+    }
+
+    .section-nav a:hover { color: var(--text); }
+    .section-nav a.here  { color: var(--accent); border-bottom-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div id="nav-mount"></div>
+
+<main>
+
+  <!-- Page hero -->
+  <div class="page-hero">
+    <p class="eyebrow">// Knowledge Base</p>
+    <h1>FAQ &amp; ABOUT</h1>
+    <p>Everything you need to know about 3DPrintFactory — our process, materials, delivery, and policies.</p>
+  </div>
+
+  <div class="content-layout">
+
+    <!-- Section nav -->
+    <nav class="section-nav" aria-label="Page sections">
+      <a href="#about">About</a>
+      <a href="#faq">FAQ</a>
+      <a href="#materials">Materials</a>
+      <a href="#contact">Contact</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#terms">Terms</a>
+      <a href="#returns">Returns</a>
+    </nav>
+
+    <!-- ── About ─────────────────────────────────────────────────────────── -->
+    <section id="about" class="content-section" aria-labelledby="aboutTitle">
+      <h2 class="content-section-title" id="aboutTitle">ABOUT 3DPRINTFACTORY</h2>
+      <div class="about-grid">
+        <div class="about-card">
+          <h3>WHO WE ARE</h3>
+          <p>
+            3DPrintFactory is a UK-based on-demand FDM 3D printing service. We make
+            professional-quality prints accessible to everyone — from hobbyists and
+            makers to product designers and small businesses.
+          </p>
+          <p style="margin-top:10px">
+            Every print is produced on calibrated FDM machines with verified filament
+            stock, inspected by a human before it leaves our workshop, and dispatched
+            with tracked delivery.
+          </p>
+        </div>
+        <div class="about-card">
+          <h3>OUR PROMISE</h3>
+          <p>
+            <strong>Transparent pricing.</strong> Every quote shows exactly what you&rsquo;re
+            paying for — materials, supports, setup, and delivery. No hidden fees.<br><br>
+            <strong>Privacy first.</strong> Your STL file is parsed entirely in your browser
+            for instant quoting. It is only uploaded when you place an order.<br><br>
+            <strong>Quality guaranteed.</strong> If a print doesn&rsquo;t meet our standards,
+            we reprint it at no charge.
+          </p>
+        </div>
+        <div class="about-card">
+          <h3>TECHNOLOGY</h3>
+          <p>
+            We use Fused Deposition Modelling (FDM) — the most versatile and
+            cost-effective 3D printing technology for functional parts and prototypes.
+            Typical layer height: 0.1&ndash;0.3 mm. Build volume: up to 300&times;300&times;400 mm.
+          </p>
+        </div>
+        <div class="about-card">
+          <h3>CONTACT &amp; LOCATION</h3>
+          <p>
+            We&rsquo;re based in the UK and ship across Europe and beyond.
+            Orders placed before 12:00 GMT on business days are typically dispatched
+            the following day.<br><br>
+            Email: <a href="mailto:hello@3dprintfactory.co.uk">hello@3dprintfactory.co.uk</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FAQ ───────────────────────────────────────────────────────────── -->
+    <section id="faq" class="content-section" aria-labelledby="faqTitle">
+      <h2 class="content-section-title" id="faqTitle">FREQUENTLY ASKED QUESTIONS</h2>
+      <ul class="faq-list" aria-label="Frequently asked questions">
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">What file formats do you accept?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              We currently accept <strong>.STL</strong> (stereolithography) files — the
+              industry-standard format for FDM printing. Binary and ASCII STL are both
+              supported. Maximum file size is <strong>50 MB</strong>. If your model is
+              larger, please decimate it in your CAD software before uploading.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">How is the quote price calculated?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              The price is calculated from the actual geometry of your model:<br><br>
+              <strong>1. Effective volume:</strong> We compute the model&rsquo;s solid volume using
+              the divergence theorem, then apply your chosen infill density — because the
+              interior is not printed solid.<br><br>
+              <strong>2. Material cost:</strong> Effective volume &times; material price per cm³.<br><br>
+              <strong>3. Support surcharge:</strong> We detect overhanging faces (downward-facing
+              normals beyond 45°) and add a proportional surcharge for the support material
+              and extra print time.<br><br>
+              <strong>4. Setup fee:</strong> A flat £2.50 per order covers machine prep and
+              quality inspection.<br><br>
+              <strong>5. Delivery:</strong> Calculated by weight (print + 300 g packaging).
+              Royal Mail Tracked 48 for orders under 2 kg, Evri Standard for heavier orders.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">Is my STL file uploaded to your servers when I get a quote?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              <strong>No.</strong> The quote tool processes your STL entirely within your browser
+              using JavaScript — no data is transmitted to our servers at the quoting stage.
+              Your file only leaves your device when you submit an order through the checkout.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">What are your print tolerances and quality standards?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              Standard tolerances are &plusmn;0.2 mm for XY dimensions and &plusmn;0.3 mm for Z.
+              Default layer height is 0.2 mm. We print at 50 mm/s with 3 perimeter walls.
+              Each part is visually inspected for layer adhesion, stringing, and dimensional
+              accuracy before dispatch. Imperfect prints are reprinted at our cost.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">How long does printing and delivery take?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              <strong>Printing:</strong> Most orders enter the print queue within a few hours
+              of payment and are completed within 24&ndash;48 hours on business days
+              (Mon&ndash;Fri, excluding UK bank holidays).<br><br>
+              <strong>Dispatch:</strong> Typically within 48&ndash;72 hours of order placement.<br><br>
+              <strong>Delivery:</strong> Royal Mail Tracked 48 (2&ndash;3 working days in the UK);
+              Evri Standard (3&ndash;5 working days in the UK). International delivery times vary.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">Which material should I choose?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              <strong>PLA</strong> — Best for display models, prototypes, and decorative items.
+              Eco-friendly, easy to post-process. Not suitable for high heat environments.<br><br>
+              <strong>PETG</strong> — A step up in durability and heat resistance. Great for
+              functional parts, living hinges, and food-safe containers. Slight flexibility.<br><br>
+              <strong>ABS</strong> — Impact-resistant with good heat tolerance (up to ~100°C).
+              Ideal for enclosures and mechanical parts. Can be acetone-smoothed for a glossy finish.<br><br>
+              <strong>TPU</strong> — Flexible and rubber-like. Excellent for gaskets, grips,
+              phone cases, wheels, and anything requiring elasticity.<br><br>
+              Not sure? <a href="faq.html#contact">Contact us</a> and we&rsquo;ll advise.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">What infill percentage should I use?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              <strong>5&ndash;15%</strong> — Decorative or lightweight parts with no structural demands.<br>
+              <strong>20&ndash;30%</strong> — General purpose (our default). Good balance of
+              strength and cost.<br>
+              <strong>40&ndash;60%</strong> — Structural parts subject to moderate loads.<br>
+              <strong>80&ndash;100%</strong> — Maximum strength. Rarely necessary; increases cost
+              and print time significantly.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">Can I order multiple different files in one order?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              Yes. Use the quote tool to upload and configure each file, add each to your
+              cart, and then checkout once. The setup fee (£2.50) and delivery are charged
+              once for the whole order regardless of how many different models you include.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">Do you print supports automatically?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              Yes. Our slicing software detects overhangs and adds supports where needed.
+              The quote tool estimates overhang severity from your STL geometry and adds a
+              proportional surcharge. Support material is removed before dispatch —
+              some minor witness marks may remain on overhanging surfaces.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">What colours are available?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              We stock a curated range of colours for each material. If you have a colour
+              preference, add it to the order notes at checkout and we&rsquo;ll do our best to
+              match. For exact RAL or Pantone colour requirements, please
+              <a href="faq.html#contact">contact us</a> before ordering.
+            </div>
+          </div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-question" aria-expanded="false">What happens if my print fails?</button>
+          <div class="faq-answer" role="region">
+            <div class="faq-answer-inner">
+              We inspect every print before dispatch. If a print fails quality checks,
+              we reprint it at no extra charge. If a defective print slips through,
+              contact us within 7 days with photos and we&rsquo;ll arrange a free reprint or
+              full refund. See our <a href="faq.html#returns">Returns Policy</a> for details.
+            </div>
+          </div>
+        </li>
+
+      </ul>
+    </section>
+
+    <!-- ── Materials table ───────────────────────────────────────────────── -->
+    <section id="materials" class="content-section" aria-labelledby="materialsTitle">
+      <h2 class="content-section-title" id="materialsTitle">MATERIALS REFERENCE</h2>
+      <table class="mat-table" aria-label="Material properties comparison">
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Price</th>
+            <th>Max temp</th>
+            <th>Best for</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PLA</td>
+            <td>£0.05/cm³</td>
+            <td>~60°C</td>
+            <td>Prototypes, display models, art</td>
+            <td>Biodegradable. Easy post-processing. Not suitable for outdoor or high-heat use.</td>
+          </tr>
+          <tr>
+            <td>PETG</td>
+            <td>£0.07/cm³</td>
+            <td>~80°C</td>
+            <td>Functional parts, food-safe use</td>
+            <td>Stronger than PLA. Slight flexibility. Good chemical resistance.</td>
+          </tr>
+          <tr>
+            <td>ABS</td>
+            <td>£0.06/cm³</td>
+            <td>~100°C</td>
+            <td>Enclosures, mechanical parts</td>
+            <td>High impact resistance. Acetone-smoothable. Requires enclosed printer.</td>
+          </tr>
+          <tr>
+            <td>TPU</td>
+            <td>£0.10/cm³</td>
+            <td>~80°C</td>
+            <td>Gaskets, grips, flexible parts</td>
+            <td>Shore 95A hardness. Excellent elongation at break. Slower print speed.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ── Contact ───────────────────────────────────────────────────────── -->
+    <section id="contact" class="content-section" aria-labelledby="contactTitle">
+      <h2 class="content-section-title" id="contactTitle">CONTACT US</h2>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <p>Have a question not covered in the FAQ? Need a custom quote for a large or complex order? Get in touch and we&rsquo;ll reply within one business day.</p>
+
+          <div class="contact-detail">
+            <span class="icon">&#9993;</span>
+            <div class="info">
+              <strong>Email</strong>
+              <a href="mailto:hello@3dprintfactory.co.uk">hello@3dprintfactory.co.uk</a>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <span class="icon">&#128336;</span>
+            <div class="info">
+              <strong>Response time</strong>
+              Within 1 business day (Mon&ndash;Fri)
+            </div>
+          </div>
+          <div class="contact-detail">
+            <span class="icon">&#x2B22;</span>
+            <div class="info">
+              <strong>Based in</strong>
+              United Kingdom
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-form-panel">
+          <div id="contactSuccess" role="alert">&#9989; Message sent. We&rsquo;ll be in touch shortly.</div>
+          <div class="form-group">
+            <label class="form-label" for="cName">Your name *</label>
+            <input class="form-input" type="text" id="cName" maxlength="80" required>
+            <span class="form-error" id="cNameErr"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cEmail">Email *</label>
+            <input class="form-input" type="email" id="cEmail" maxlength="254" required>
+            <span class="form-error" id="cEmailErr"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cMsg">Message *</label>
+            <textarea class="form-input" id="cMsg" rows="5" maxlength="2000"
+                      style="resize:vertical;min-height:100px" required></textarea>
+            <span class="form-error" id="cMsgErr"></span>
+          </div>
+          <button type="button" class="btn btn-primary btn-full" id="contactSend">SEND MESSAGE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Privacy Policy ────────────────────────────────────────────────── -->
+    <section id="privacy" class="content-section" aria-labelledby="privacyTitle">
+      <h2 class="content-section-title" id="privacyTitle">PRIVACY POLICY</h2>
+      <div class="policy-text">
+        <p>Last updated: March 2026</p>
+
+        <h3>What data we collect</h3>
+        <p>When you place an order we collect: your name, email address, postal address, and phone number. We do not store payment card details — payment is processed by our payment provider and card data is never transmitted to or stored on our servers.</p>
+
+        <h3>STL files</h3>
+        <p>Your STL file is parsed <strong>client-side in your browser</strong> for the purpose of generating an instant quote. The file is only transmitted to our servers when you submit an order. Uploaded files are retained for order fulfilment and deleted after 90 days.</p>
+
+        <h3>Cookies and tracking</h3>
+        <p>We use <code>localStorage</code> and <code>sessionStorage</code> to persist your cart and order information within your browser session. We do not use tracking cookies or third-party analytics.</p>
+
+        <h3>Your rights</h3>
+        <p>Under UK GDPR you have the right to access, correct, or delete your personal data. Contact <a href="mailto:privacy@3dprintfactory.co.uk">privacy@3dprintfactory.co.uk</a> with any requests.</p>
+
+        <h3>Data sharing</h3>
+        <p>We share your shipping address with our courier partners (Royal Mail, Evri) solely for order delivery. We do not sell or share your data with third parties for marketing purposes.</p>
+      </div>
+    </section>
+
+    <!-- ── Terms of Service ───────────────────────────────────────────────── -->
+    <section id="terms" class="content-section" aria-labelledby="termsTitle">
+      <h2 class="content-section-title" id="termsTitle">TERMS OF SERVICE</h2>
+      <div class="policy-text">
+        <p>Last updated: March 2026</p>
+
+        <h3>Use of service</h3>
+        <p>By using 3DPrintFactory you confirm that you are at least 18 years old and that any files you upload are your own work or that you hold the appropriate licence. You must not upload files that:</p>
+        <ul>
+          <li>Infringe any copyright, patent, or trademark</li>
+          <li>Depict or enable illegal activity</li>
+          <li>Constitute weapons or components thereof (where prohibited by law)</li>
+        </ul>
+
+        <h3>Accuracy of quotes</h3>
+        <p>Our instant quotes are estimates based on STL geometry. Final pricing may vary slightly if the model requires exceptional support structures, multi-part assembly, or unusual geometry. We will contact you before processing payment if the actual price differs by more than 10%.</p>
+
+        <h3>Intellectual property</h3>
+        <p>You retain full ownership of your designs. By uploading a file you grant 3DPrintFactory a limited licence to reproduce the design solely for the purpose of fulfilling your order.</p>
+
+        <h3>Limitation of liability</h3>
+        <p>3DPrintFactory&rsquo;s liability is limited to the value of your order. We are not liable for consequential or indirect losses arising from print defects or delays.</p>
+      </div>
+    </section>
+
+    <!-- ── Returns Policy ─────────────────────────────────────────────────── -->
+    <section id="returns" class="content-section" aria-labelledby="returnsTitle">
+      <h2 class="content-section-title" id="returnsTitle">RETURNS POLICY</h2>
+      <div class="policy-text">
+        <h3>Quality guarantee</h3>
+        <p>Every order is inspected before dispatch. If your print is defective (layer delamination, significant dimensional error, surface defects beyond normal FDM characteristics), contact us within <strong>7 days of delivery</strong> with:</p>
+        <ul>
+          <li>Your order reference number</li>
+          <li>Clear photographs of the defect</li>
+          <li>A description of the issue</li>
+        </ul>
+        <p>We will offer a <strong>free reprint</strong> or <strong>full refund</strong> at our discretion.</p>
+
+        <h3>Non-returnable items</h3>
+        <p>Custom 3D prints are made to order and cannot be returned simply because you changed your mind, or because of inherent FDM characteristics (visible layer lines, slight surface texture). Please review material properties and request a sample print if unsure.</p>
+
+        <h3>Cancellations</h3>
+        <p>Orders may be cancelled free of charge within <strong>2 hours</strong> of placement, provided printing has not yet commenced. Email <a href="mailto:orders@3dprintfactory.co.uk">orders@3dprintfactory.co.uk</a> immediately with your order reference.</p>
+      </div>
+    </section>
+
+  </div><!-- /content-layout -->
+</main>
+
+<div id="footer-mount"></div>
+
+<script src="js/cart.js"></script>
+<script>
+'use strict';
+
+/* ── FAQ accordion ── */
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item   = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+
+    // Close all open items
+    document.querySelectorAll('.faq-item.open').forEach(el => {
+      el.classList.remove('open');
+      el.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+    });
+
+    // Toggle clicked item
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
+/* ── Section nav active highlight ── */
+const sections    = document.querySelectorAll('.content-section');
+const navLinks    = document.querySelectorAll('.section-nav a');
+const scrollEl    = document.documentElement;
+
+function updateActiveNav() {
+  let current = '';
+  sections.forEach(sec => {
+    if (scrollEl.scrollTop + 120 >= sec.offsetTop) {
+      current = sec.id;
+    }
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('here', a.getAttribute('href') === `#${current}`);
+  });
+}
+
+document.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+
+/* ── Contact form (demo — no real submission) ── */
+document.getElementById('contactSend').addEventListener('click', () => {
+  const nameEl  = document.getElementById('cName');
+  const emailEl = document.getElementById('cEmail');
+  const msgEl   = document.getElementById('cMsg');
+
+  // Clear previous errors
+  ['cNameErr', 'cEmailErr', 'cMsgErr'].forEach(id => {
+    document.getElementById(id).textContent = '';
+  });
+  [nameEl, emailEl, msgEl].forEach(el => el.classList.remove('error'));
+
+  let valid = true;
+  const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
+
+  const name  = nameEl.value.trim().slice(0, 80);
+  const email = emailEl.value.trim().slice(0, 254);
+  const msg   = msgEl.value.trim().slice(0, 2000);
+
+  if (!name) {
+    document.getElementById('cNameErr').textContent = 'Name is required.';
+    nameEl.classList.add('error');
+    valid = false;
+  }
+  if (!email) {
+    document.getElementById('cEmailErr').textContent = 'Email is required.';
+    emailEl.classList.add('error');
+    valid = false;
+  } else if (!EMAIL_RE.test(email)) {
+    document.getElementById('cEmailErr').textContent = 'Enter a valid email address.';
+    emailEl.classList.add('error');
+    valid = false;
+  }
+  if (!msg || msg.length < 10) {
+    document.getElementById('cMsgErr').textContent = 'Please enter a message (minimum 10 characters).';
+    msgEl.classList.add('error');
+    valid = false;
+  }
+
+  if (!valid) return;
+
+  // Demo: show success and reset form
+  document.getElementById('contactSuccess').classList.add('visible');
+  nameEl.value  = '';
+  emailEl.value = '';
+  msgEl.value   = '';
+
+  setTimeout(() => {
+    document.getElementById('contactSuccess').classList.remove('visible');
+  }, 6000);
+});
+</script>
+<script src="js/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="3DPrintFactory — professional FDM 3D printing on demand. Upload your STL file, get an instant quote, and receive precision-printed parts delivered to your door.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self';">
+  <title>3DPrintFactory — Professional 3D Printing On Demand</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* ── Hero ── */
+    .hero {
+      min-height:      calc(100vh - 56px);
+      display:         flex;
+      flex-direction:  column;
+      align-items:     center;
+      justify-content: center;
+      text-align:      center;
+      padding:         48px 24px;
+      position:        relative;
+      overflow:        hidden;
+    }
+
+    .hero::before {
+      content:          '';
+      position:         absolute;
+      inset:            0;
+      background-image:
+        linear-gradient(rgba(255,98,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,98,0,0.04) 1px, transparent 1px);
+      background-size:  60px 60px;
+      pointer-events:   none;
+    }
+
+    .hero::after {
+      content:    '';
+      position:   absolute;
+      width:      600px;
+      height:     600px;
+      background: radial-gradient(circle, rgba(255,98,0,0.06) 0%, transparent 70%);
+      top:        50%;
+      left:       50%;
+      transform:  translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size:      0.62rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color:          var(--accent);
+      margin-bottom:  20px;
+      position:       relative;
+      z-index:        1;
+    }
+
+    .hero h1 {
+      font-family:  var(--display);
+      font-size:    clamp(3.2rem, 8vw, 7.5rem);
+      line-height:  0.92;
+      letter-spacing: 0.04em;
+      position:     relative;
+      z-index:      1;
+      max-width:    900px;
+    }
+
+    .hero h1 .accent-line { color: var(--accent); }
+
+    .hero-sub {
+      font-size:   clamp(0.82rem, 2vw, 0.95rem);
+      color:       var(--text-muted);
+      max-width:   520px;
+      margin-top:  20px;
+      line-height: 1.8;
+      letter-spacing: 0.04em;
+      position:    relative;
+      z-index:     1;
+    }
+
+    .hero-actions {
+      display:     flex;
+      gap:         12px;
+      margin-top:  36px;
+      flex-wrap:   wrap;
+      justify-content: center;
+      position:    relative;
+      z-index:     1;
+    }
+
+    .hero-stats {
+      display:    flex;
+      gap:        48px;
+      margin-top: 72px;
+      position:   relative;
+      z-index:    1;
+      flex-wrap:  wrap;
+      justify-content: center;
+    }
+
+    .stat-item { text-align: center; }
+
+    .stat-num {
+      font-family:    var(--display);
+      font-size:      2.4rem;
+      color:          var(--accent);
+      letter-spacing: 0.04em;
+      line-height:    1;
+      text-shadow:    0 0 30px rgba(255,98,0,0.35);
+    }
+
+    .stat-label {
+      font-size:      0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+      margin-top:     4px;
+    }
+
+    /* ── How it works ── */
+    .steps-grid {
+      display:               grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:                   1px;
+      background:            var(--border);
+      border:                1px solid var(--border);
+      max-width:             1000px;
+      margin:                0 auto;
+    }
+
+    .step {
+      background: var(--surface);
+      padding:    40px 32px;
+      position:   relative;
+    }
+
+    .step-num {
+      font-family:    var(--display);
+      font-size:      4rem;
+      color:          var(--accent-dim);
+      letter-spacing: 0.05em;
+      line-height:    1;
+      margin-bottom:  16px;
+    }
+
+    .step h3 {
+      font-family:    var(--display);
+      font-size:      1.5rem;
+      letter-spacing: 0.08em;
+      margin-bottom:  10px;
+    }
+
+    .step p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.8; }
+
+    .step-icon {
+      font-size:     2rem;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 760px) {
+      .steps-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Materials ── */
+    .materials-grid {
+      display:               grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:                   16px;
+      max-width:             1000px;
+      margin:                0 auto;
+    }
+
+    .mat-card {
+      background:  var(--surface);
+      border:      1px solid var(--border);
+      padding:     28px 22px;
+      transition:  all 0.2s;
+      cursor:      default;
+    }
+
+    .mat-card:hover {
+      border-color: var(--accent);
+      background:   var(--accent-dim);
+    }
+
+    .mat-card .mat-abbr {
+      font-family:    var(--display);
+      font-size:      2.8rem;
+      color:          var(--accent);
+      letter-spacing: 0.06em;
+      line-height:    1;
+      margin-bottom:  6px;
+    }
+
+    .mat-card .mat-name {
+      font-size:      0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+      margin-bottom:  16px;
+    }
+
+    .mat-card .mat-desc {
+      font-size:   0.76rem;
+      color:       var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .mat-card .mat-price {
+      font-family:    var(--display);
+      font-size:      1.2rem;
+      color:          var(--text);
+      letter-spacing: 0.05em;
+    }
+
+    .mat-card .mat-price span {
+      font-family: var(--mono);
+      font-size:   0.65rem;
+      color:       var(--text-muted);
+    }
+
+    @media (max-width: 860px) {
+      .materials-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .materials-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Features ── */
+    .features-grid {
+      display:               grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:                   24px;
+      max-width:             1000px;
+      margin:                0 auto;
+    }
+
+    .feature-card {
+      padding: 28px 24px;
+      border:  1px solid var(--border);
+    }
+
+    .feature-icon {
+      font-size:     1.8rem;
+      margin-bottom: 14px;
+    }
+
+    .feature-card h3 {
+      font-family:    var(--display);
+      font-size:      1.3rem;
+      letter-spacing: 0.08em;
+      margin-bottom:  8px;
+    }
+
+    .feature-card p {
+      font-size:   0.76rem;
+      color:       var(--text-muted);
+      line-height: 1.8;
+    }
+
+    @media (max-width: 760px) {
+      .features-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      background:  var(--surface);
+      border:      1px solid var(--border);
+      padding:     64px 40px;
+      text-align:  center;
+      max-width:   800px;
+      margin:      0 auto;
+      position:    relative;
+      overflow:    hidden;
+    }
+
+    .cta-banner::before {
+      content:    '';
+      position:   absolute;
+      inset:      0;
+      background: radial-gradient(ellipse at center, rgba(255,98,0,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-banner h2 {
+      font-family:    var(--display);
+      font-size:      clamp(2.2rem, 5vw, 4rem);
+      letter-spacing: 0.06em;
+      line-height:    1;
+      position:       relative;
+    }
+
+    .cta-banner p {
+      font-size:   0.85rem;
+      color:       var(--text-muted);
+      margin:      16px auto 0;
+      max-width:   480px;
+      line-height: 1.7;
+      position:    relative;
+    }
+
+    .cta-banner .hero-actions { margin-top: 28px; }
+
+    /* ── Section backgrounds ── */
+    .bg-surface { background: var(--surface); }
+    .section-divider {
+      width:  100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<div id="nav-mount"></div>
+
+<main>
+
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <section class="hero" aria-label="Hero">
+    <p class="hero-eyebrow">&#x2B22; Professional FDM 3D Printing</p>
+    <h1>PRECISION<br><span class="accent-line">3D PRINTS</span><br>ON DEMAND</h1>
+    <p class="hero-sub">
+      Upload your STL file, configure your print, and get an instant quote.
+      We print and ship within days — straight to your door.
+    </p>
+    <div class="hero-actions">
+      <a href="quote.html" class="btn btn-primary btn-lg">GET INSTANT QUOTE &rarr;</a>
+      <a href="faq.html" class="btn btn-outline btn-lg">HOW IT WORKS</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Materials</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">48H</div>
+        <div class="stat-label">Typical Dispatch</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">0.1mm</div>
+        <div class="stat-label">Layer Resolution</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Quality Checked</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── How It Works ──────────────────────────────────────────────────────── -->
+  <section class="page-section" aria-labelledby="how-heading">
+    <div class="section-header">
+      <p class="eyebrow">// Simple Process</p>
+      <h2 id="how-heading">HOW IT WORKS</h2>
+      <p>From file upload to finished part — in three simple steps.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-icon">&#x2B22;</div>
+        <h3>UPLOAD YOUR MODEL</h3>
+        <p>
+          Drag and drop your <strong>.STL</strong> file into our instant quote tool.
+          We parse your geometry client-side — your file never leaves your browser
+          until you place an order.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-icon">&#9881;</div>
+        <h3>CONFIGURE &amp; QUOTE</h3>
+        <p>
+          Choose your material (PLA, PETG, ABS or TPU), set infill density, and
+          pick a quantity. Our estimator calculates volume, supports, and shipping
+          instantly.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-icon">&#9993;</div>
+        <h3>WE PRINT &amp; DELIVER</h3>
+        <p>
+          Place your order and we'll print, quality-check, and dispatch your parts
+          typically within 48 hours via Royal Mail or Evri, tracked to your door.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Materials ─────────────────────────────────────────────────────────── -->
+  <section class="page-section bg-surface" aria-labelledby="materials-heading">
+    <div class="section-header">
+      <p class="eyebrow">// Print Materials</p>
+      <h2 id="materials-heading">CHOOSE YOUR MATERIAL</h2>
+      <p>Four high-quality filaments to suit every application and budget.</p>
+    </div>
+    <div class="materials-grid">
+      <div class="mat-card">
+        <div class="mat-abbr">PLA</div>
+        <div class="mat-name">Polylactic Acid</div>
+        <div class="mat-desc">
+          The most popular FDM material. Biodegradable, easy to print, great
+          surface finish. Ideal for prototypes, display models, and general use.
+        </div>
+        <div class="mat-price">from £0.05 <span>/ cm³ material</span></div>
+      </div>
+      <div class="mat-card">
+        <div class="mat-abbr">PETG</div>
+        <div class="mat-name">Polyethylene Terephthalate Glycol</div>
+        <div class="mat-desc">
+          Tougher than PLA with better heat and chemical resistance.
+          Food-safe grades available. Great for functional parts and enclosures.
+        </div>
+        <div class="mat-price">from £0.07 <span>/ cm³ material</span></div>
+      </div>
+      <div class="mat-card">
+        <div class="mat-abbr">ABS</div>
+        <div class="mat-name">Acrylonitrile Butadiene Styrene</div>
+        <div class="mat-desc">
+          Impact-resistant with high temperature tolerance. Post-processable
+          with acetone for smooth finishes. Excellent for mechanical parts.
+        </div>
+        <div class="mat-price">from £0.06 <span>/ cm³ material</span></div>
+      </div>
+      <div class="mat-card">
+        <div class="mat-abbr">TPU</div>
+        <div class="mat-name">Thermoplastic Polyurethane</div>
+        <div class="mat-desc">
+          Flexible and rubber-like. Excellent for gaskets, grips, phone cases,
+          and any part requiring elasticity or vibration damping.
+        </div>
+        <div class="mat-price">from £0.10 <span>/ cm³ material</span></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:36px">
+      <a href="quote.html" class="btn btn-primary">CONFIGURE YOUR PRINT &rarr;</a>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── Features ──────────────────────────────────────────────────────────── -->
+  <section class="page-section" aria-labelledby="features-heading">
+    <div class="section-header">
+      <p class="eyebrow">// Why Choose Us</p>
+      <h2 id="features-heading">BUILT FOR MAKERS</h2>
+      <p>Everything you need, nothing you don't.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3>INSTANT QUOTES</h3>
+        <p>
+          Upload your STL and receive a detailed, transparent price breakdown
+          in seconds — materials, supports, setup fee, and delivery all included.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128274;</div>
+        <h3>SECURE UPLOAD</h3>
+        <p>
+          Your STL is processed entirely in your browser for instant quoting.
+          Files are only transmitted when you place an order, over encrypted HTTPS.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128176;</div>
+        <h3>TRANSPARENT PRICING</h3>
+        <p>
+          No hidden fees. Every quote breaks down material cost, support
+          surcharge, setup fee, and tracked delivery. Pay exactly what you see.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128190;</div>
+        <h3>SUPPORT DETECTION</h3>
+        <p>
+          Our geometry engine automatically detects overhangs in your model
+          and factors support material costs into the quote automatically.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128666;</div>
+        <h3>TRACKED DELIVERY</h3>
+        <p>
+          All orders dispatched with Royal Mail Tracked 48 or Evri Standard.
+          Delivery cost automatically calculated based on print weight.
+        </p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9989;</div>
+        <h3>QUALITY CHECKED</h3>
+        <p>
+          Every print is visually inspected before dispatch. If it doesn't
+          meet our standards, we reprint at no extra charge.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ── CTA ───────────────────────────────────────────────────────────────── -->
+  <section class="page-section-sm" aria-label="Call to action">
+    <div class="cta-banner">
+      <h2>READY TO PRINT?</h2>
+      <p>
+        Upload your STL, configure your settings, and get a fully itemised
+        quote in under 10 seconds.
+      </p>
+      <div class="hero-actions">
+        <a href="quote.html" class="btn btn-primary btn-lg">START YOUR QUOTE</a>
+        <a href="faq.html#contact" class="btn btn-outline btn-lg">CONTACT US</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Footer -->
+<div id="footer-mount"></div>
+
+<script src="js/cart.js"></script>
+<script src="js/nav.js"></script>
+</body>
+</html>

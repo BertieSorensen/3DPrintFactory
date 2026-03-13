@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Order confirmed — your 3D print job has been received.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self';">
+  <title>Order Confirmed — 3DPrintFactory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .confirm-card {
+      background: var(--surface);
+      border:     1px solid var(--border);
+      max-width:  620px;
+      width:      100%;
+      padding:    48px 40px;
+      text-align: center;
+      position:   relative;
+      overflow:   hidden;
+    }
+
+    .confirm-card::before {
+      content:    '';
+      position:   absolute;
+      inset:      0;
+      background: radial-gradient(ellipse at top, rgba(255,98,0,0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .confirm-icon {
+      font-size:   3.5rem;
+      margin-bottom: 8px;
+      display:     block;
+    }
+
+    .confirm-title {
+      font-family:    var(--display);
+      font-size:      clamp(2.4rem, 6vw, 4rem);
+      letter-spacing: 0.06em;
+      color:          var(--accent);
+      line-height:    1;
+      margin-bottom:  8px;
+      text-shadow:    0 0 40px rgba(255,98,0,0.35);
+      position:       relative;
+    }
+
+    .confirm-subtitle {
+      font-size:   0.8rem;
+      color:       var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 32px;
+      position:    relative;
+    }
+
+    /* Order ID box */
+    .order-id-box {
+      background:    var(--surface2);
+      border:        1px solid var(--border);
+      padding:       16px 24px;
+      margin-bottom: 28px;
+      position:      relative;
+    }
+
+    .order-id-label {
+      font-size:      0.58rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+      margin-bottom:  6px;
+    }
+
+    .order-id-value {
+      font-family:    var(--display);
+      font-size:      1.8rem;
+      color:          var(--accent);
+      letter-spacing: 0.12em;
+    }
+
+    /* Details list */
+    .confirm-details {
+      text-align:    left;
+      border:        1px solid var(--border);
+      margin-bottom: 28px;
+      position:      relative;
+    }
+
+    .detail-row {
+      display:      flex;
+      justify-content: space-between;
+      align-items:  baseline;
+      padding:      11px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size:    0.75rem;
+      gap:          12px;
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+
+    .detail-row .dk { color: var(--text-muted); letter-spacing: 0.08em; flex-shrink: 0; }
+    .detail-row .dv { color: var(--text); text-align: right; word-break: break-all; }
+
+    /* Timeline */
+    .timeline {
+      text-align:    left;
+      margin-bottom: 28px;
+      position:      relative;
+    }
+
+    .timeline-title {
+      font-size:      0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+      margin-bottom:  14px;
+    }
+
+    .timeline-item {
+      display:     flex;
+      gap:         14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+
+    .tl-dot {
+      width:        10px;
+      height:       10px;
+      border-radius: 50%;
+      background:   var(--accent);
+      flex-shrink:  0;
+      margin-top:   4px;
+      box-shadow:   0 0 8px var(--accent);
+    }
+
+    .tl-dot.dim { background: var(--border); box-shadow: none; }
+
+    .tl-content {}
+    .tl-label { font-size: 0.78rem; margin-bottom: 2px; }
+    .tl-desc  { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.04em; }
+
+    /* Actions */
+    .confirm-actions {
+      display:    flex;
+      gap:        12px;
+      flex-wrap:  wrap;
+      justify-content: center;
+      position:   relative;
+    }
+
+    @media (max-width: 480px) {
+      .confirm-card { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="nav-mount"></div>
+
+<main>
+  <div class="confirm-card" role="main" aria-labelledby="confirmTitle">
+
+    <span class="confirm-icon" aria-hidden="true">&#9989;</span>
+    <h1 class="confirm-title" id="confirmTitle">ORDER RECEIVED</h1>
+    <p class="confirm-subtitle">Thank you for your order. We&rsquo;ll get printing right away.</p>
+
+    <div class="order-id-box" aria-label="Order reference">
+      <div class="order-id-label">Order reference</div>
+      <div class="order-id-value" id="orderId">&#8212;</div>
+    </div>
+
+    <div class="confirm-details" id="orderDetails" aria-label="Order details">
+      <!-- populated by JS -->
+    </div>
+
+    <div class="timeline" aria-label="Order timeline">
+      <div class="timeline-title">What happens next</div>
+      <div class="timeline-item">
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <div class="tl-label">Order confirmed</div>
+          <div class="tl-desc">Your order has been received and is queued for printing.</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot dim"></div>
+        <div class="tl-content">
+          <div class="tl-label">Printing</div>
+          <div class="tl-desc">We&rsquo;ll start printing within 24 hours on business days.</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot dim"></div>
+        <div class="tl-content">
+          <div class="tl-label">Quality check &amp; dispatch</div>
+          <div class="tl-desc">Parts are inspected, packed, and sent within 48&ndash;72 hours.</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot dim"></div>
+        <div class="tl-content">
+          <div class="tl-label">Delivered</div>
+          <div class="tl-desc">A tracking number will be emailed to you upon dispatch.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-actions">
+      <a href="index.html" class="btn btn-outline">BACK TO HOME</a>
+      <a href="quote.html" class="btn btn-primary">NEW ORDER</a>
+    </div>
+
+  </div>
+</main>
+
+<div id="footer-mount"></div>
+
+<script src="js/cart.js"></script>
+<script>
+'use strict';
+
+/* ─── Read order data from sessionStorage ────────────────────────────────── */
+let order = null;
+
+try {
+  const raw = sessionStorage.getItem('3dpf_order');
+  if (raw) {
+    order = JSON.parse(raw);
+    // Clear immediately so it can't be replayed
+    sessionStorage.removeItem('3dpf_order');
+  }
+} catch { /* ignore */ }
+
+/* ─── Populate page ──────────────────────────────────────────────────────── */
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str ?? '');
+  return div.innerHTML;
+}
+
+function buildDetail(label, value) {
+  return `
+    <div class="detail-row">
+      <span class="dk">${escapeHTML(label)}</span>
+      <span class="dv">${escapeHTML(value)}</span>
+    </div>`;
+}
+
+const orderIdEl  = document.getElementById('orderId');
+const detailsEl  = document.getElementById('orderDetails');
+
+if (order && order.orderId) {
+  orderIdEl.textContent = order.orderId; // textContent — no HTML injection
+
+  const rows = [];
+  if (order.firstName || order.lastName) {
+    rows.push(buildDetail('Name', `${order.firstName || ''} ${order.lastName || ''}`.trim()));
+  }
+  if (order.email)   rows.push(buildDetail('Email', order.email));
+  if (order.address) rows.push(buildDetail('Ship to', order.address));
+  if (order.items)   rows.push(buildDetail('Items', `${order.items} line item(s)`));
+  if (order.total)   rows.push(buildDetail('Total charged', `£${order.total}`));
+
+  const now = new Date();
+  rows.push(buildDetail('Order date', now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })));
+
+  detailsEl.innerHTML = rows.join('');
+} else {
+  // No session data — user may have navigated directly
+  orderIdEl.textContent = 'N/A';
+  detailsEl.innerHTML   = buildDetail('Status', 'Order details unavailable — please check your email.');
+}
+</script>
+<script src="js/nav.js"></script>
+</body>
+</html>
