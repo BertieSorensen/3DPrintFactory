@@ -678,6 +678,63 @@
       margin-top: 6px;
     }
 
+    /* ── Viewer Controls ── */
+    .viewer-controls {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-start;
+    }
+
+    .vc-dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 28px);
+      grid-template-rows: repeat(3, 28px);
+      gap: 2px;
+    }
+
+    .vc-btn {
+      background: rgba(10,10,10,0.82);
+      border: 1px solid #2a2a2a;
+      color: #666;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .vc-btn:hover  { border-color: var(--accent); color: var(--accent); background: rgba(255,98,0,0.08); }
+    .vc-btn:active { background: rgba(255,98,0,0.16); }
+
+    /* place dpad arrows */
+    .vc-up    { grid-column: 2; grid-row: 1; }
+    .vc-left  { grid-column: 1; grid-row: 2; }
+    .vc-right { grid-column: 3; grid-row: 2; }
+    .vc-down  { grid-column: 2; grid-row: 3; }
+
+    .vc-zoom-row {
+      display: flex;
+      gap: 2px;
+    }
+
+    .vc-reset {
+      width: 60px;       /* spans + / - row */
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
     /* Grid overlay on viewer */
     .viewer::before {
       content: '';
@@ -775,6 +832,21 @@
     </div>
     <canvas id="canvas"></canvas>
     <div class="viewer-hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom</div>
+
+    <!-- on-screen orbit + zoom controls -->
+    <div class="viewer-controls">
+      <div class="vc-dpad">
+        <button class="vc-btn vc-up"    id="vcUp"    title="Orbit up">&#9650;</button>
+        <button class="vc-btn vc-left"  id="vcLeft"  title="Orbit left">&#9664;</button>
+        <button class="vc-btn vc-right" id="vcRight" title="Orbit right">&#9654;</button>
+        <button class="vc-btn vc-down"  id="vcDown"  title="Orbit down">&#9660;</button>
+      </div>
+      <div class="vc-zoom-row">
+        <button class="vc-btn" id="vcZoomIn"  title="Zoom in"  style="width:29px">+</button>
+        <button class="vc-btn" id="vcZoomOut" title="Zoom out" style="width:29px">−</button>
+        <button class="vc-btn vc-reset" id="vcReset" title="Reset view">RESET</button>
+      </div>
+    </div>
 
     <div class="cart-drawer" id="cartDrawer">
       <div class="cart-header">
@@ -901,16 +973,69 @@ canvas.addEventListener('wheel', e => {
   e.preventDefault();
 }, { passive: false });
 
-// Touch
-let lt = null;
-canvas.addEventListener('touchstart', e => { lt = e.touches[0]; e.preventDefault(); }, { passive: false });
-canvas.addEventListener('touchmove', e => {
-  if (!lt) return;
-  const t = e.touches[0];
-  sph.theta -= (t.clientX - lt.clientX) * 0.006;
-  sph.phi = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (t.clientY - lt.clientY) * 0.006));
-  lt = t; applyCamera(); e.preventDefault();
+// Touch — single finger orbit, two-finger pinch-to-zoom
+let lt = null, ltDist = null;
+
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    ltDist = Math.sqrt(dx*dx + dy*dy);
+    lt = null;
+  } else {
+    lt = e.touches[0];
+    ltDist = null;
+  }
+  e.preventDefault();
 }, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[0].clientX - e.touches[1].clientX;
+    const dy = e.touches[0].clientY - e.touches[1].clientY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (ltDist !== null) {
+      const factor = ltDist / dist;
+      sph.r = Math.max(sph.r * 0.05, Math.min(sph.r * 20, sph.r * factor));
+      applyCamera();
+    }
+    ltDist = dist;
+    lt = null;
+  } else if (lt) {
+    const t = e.touches[0];
+    sph.theta -= (t.clientX - lt.clientX) * 0.006;
+    sph.phi = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (t.clientY - lt.clientY) * 0.006));
+    lt = t; applyCamera();
+  }
+  e.preventDefault();
+}, { passive: false });
+
+// ─── On-screen controls ───────────────────────────────────────────────────────
+const ORBIT_STEP = 0.12;
+const ZOOM_STEP  = 0.15;
+
+let defaultSph = { theta: 0.5, phi: 1.1, r: 300 };
+
+function vcOrbit(dTheta, dPhi) {
+  sph.theta += dTheta;
+  sph.phi = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + dPhi));
+  applyCamera();
+}
+
+document.getElementById('vcUp').addEventListener('click',    () => vcOrbit(0, -ORBIT_STEP));
+document.getElementById('vcDown').addEventListener('click',  () => vcOrbit(0,  ORBIT_STEP));
+document.getElementById('vcLeft').addEventListener('click',  () => vcOrbit(-ORBIT_STEP, 0));
+document.getElementById('vcRight').addEventListener('click', () => vcOrbit( ORBIT_STEP, 0));
+
+document.getElementById('vcZoomIn').addEventListener('click',  () => { sph.r *= (1 - ZOOM_STEP); applyCamera(); });
+document.getElementById('vcZoomOut').addEventListener('click', () => { sph.r *= (1 + ZOOM_STEP); applyCamera(); });
+
+document.getElementById('vcReset').addEventListener('click', () => {
+  sph.theta = defaultSph.theta;
+  sph.phi   = defaultSph.phi;
+  sph.r     = defaultSph.r;
+  applyCamera();
+});
 
 // Resize
 function resize() {
@@ -1061,6 +1186,7 @@ function loadModel(buffer) {
   modelCenter.set(0, size.y * scale / 2, 0);
   sph.r = maxDim * scale * 2.2;
   sph.theta = 0.5; sph.phi = 1.1;
+  defaultSph = { theta: sph.theta, phi: sph.phi, r: sph.r };
   applyCamera();
 
   gridHelper.position.y = 0;
