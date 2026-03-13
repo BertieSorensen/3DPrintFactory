@@ -678,6 +678,81 @@
       margin-top: 6px;
     }
 
+    /* ── Transform Section ── */
+    .transform-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .transform-label {
+      font-size: 0.68rem;
+      color: #aaa;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      width: 42px;
+    }
+
+    .transform-val {
+      font-size: 0.82rem;
+      color: var(--accent);
+    }
+
+    .scale-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .scale-input-wrap input[type=number] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 4px 7px;
+      width: 68px;
+      text-align: right;
+      -moz-appearance: textfield;
+    }
+
+    .scale-input-wrap input[type=number]::-webkit-outer-spin-button,
+    .scale-input-wrap input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .scale-input-wrap input[type=number]:focus { outline: none; border-color: var(--accent); }
+
+    .transform-unit {
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .dim-display {
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 14px;
+      padding: 5px 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    .reset-transform-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 7px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .reset-transform-btn:hover { border-color: var(--accent); color: var(--accent); }
+
     /* ── Viewer Controls ── */
     .viewer-controls {
       position: absolute;
@@ -773,8 +848,41 @@
       </div>
     </div>
 
+    <div class="section" id="transformSection" style="display:none">
+      <div class="section-label">02 Transform</div>
+
+      <div class="transform-row">
+        <span class="transform-label">Scale</span>
+        <div class="scale-input-wrap">
+          <input type="number" id="scaleInput" value="100" min="1" max="10000" step="1">
+          <span class="transform-unit">%</span>
+        </div>
+      </div>
+      <div class="dim-display" id="dimDisplay">upload a model to set dimensions</div>
+
+      <div class="transform-row">
+        <span class="transform-label">Rot X</span>
+        <span class="transform-val" id="rotXVal">0°</span>
+      </div>
+      <input type="range" id="rotXSlider" min="0" max="359" value="0" style="margin-bottom:10px">
+
+      <div class="transform-row">
+        <span class="transform-label">Rot Y</span>
+        <span class="transform-val" id="rotYVal">0°</span>
+      </div>
+      <input type="range" id="rotYSlider" min="0" max="359" value="0" style="margin-bottom:10px">
+
+      <div class="transform-row">
+        <span class="transform-label">Rot Z</span>
+        <span class="transform-val" id="rotZVal">0°</span>
+      </div>
+      <input type="range" id="rotZSlider" min="0" max="359" value="0">
+
+      <button class="reset-transform-btn" id="resetTransformBtn">RESET TRANSFORM</button>
+    </div>
+
     <div class="section">
-      <div class="section-label">02 Material</div>
+      <div class="section-label">03 Material</div>
       <div class="material-grid" id="matGrid">
         <button class="material-btn active" data-mat="PLA">
           <span class="mat-name">PLA</span>
@@ -792,7 +900,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">03 Infill</div>
+      <div class="section-label">04 Infill</div>
       <div class="slider-row">
         <span class="slider-label">Infill density</span>
         <span class="slider-val" id="infillVal">20%</span>
@@ -801,7 +909,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">04 Quantity</div>
+      <div class="section-label">05 Quantity</div>
       <div class="slider-row">
         <span class="slider-label">Number of copies</span>
         <span class="slider-val" id="qtyVal">1</span>
@@ -814,7 +922,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">05 Quote</div>
+      <div class="section-label">06 Quote</div>
       <div id="quoteBox">
         <div class="quote-empty">Upload an STL to generate a quote</div>
       </div>
@@ -872,6 +980,12 @@
 
 <script>
 // ─── State ────────────────────────────────────────────────────────────────────
+let userScale = 1.0;          // user-set multiplier (1 = original size)
+let modelRotDeg = { x: 0, y: 0, z: 0 };
+let baseVolumeCm3 = null;     // unscaled volume
+let baseDims = null;          // unscaled bounding box in mm { x, y, z }
+let meshDisplayScale = 1;     // the 100/maxDim normalisation factor
+
 const materials = {
   PLA:  { price: 0.05, density: 1.24 },
   PETG: { price: 0.07, density: 1.27 },
@@ -1178,23 +1292,65 @@ function loadModel(buffer) {
   const size = new THREE.Vector3();
   box.getSize(size);
   const maxDim = Math.max(size.x, size.y, size.z);
-  const scale = 100 / maxDim;
+  meshDisplayScale = 100 / maxDim;
 
-  currentMesh.scale.setScalar(scale);
-  currentMesh.position.set(-center.x * scale, (-center.y + size.y / 2) * scale, -center.z * scale);
+  currentMesh.position.set(
+    -center.x * meshDisplayScale,
+    (-center.y + size.y / 2) * meshDisplayScale,
+    -center.z * meshDisplayScale
+  );
 
-  modelCenter.set(0, size.y * scale / 2, 0);
-  sph.r = maxDim * scale * 2.2;
+  // Store base dims & volume before any user transform
+  baseDims = { x: size.x, y: size.y, z: size.z };
+  baseVolumeCm3 = volumeMm3(pos) / 1000;
+  supportSurcharge = calcSupportSurcharge(pos, nor);
+
+  // Reset user transform
+  userScale = 1.0;
+  modelRotDeg = { x: 0, y: 0, z: 0 };
+  document.getElementById('scaleInput').value = 100;
+  document.getElementById('rotXSlider').value = 0;
+  document.getElementById('rotYSlider').value = 0;
+  document.getElementById('rotZSlider').value = 0;
+  document.getElementById('rotXVal').textContent = '0°';
+  document.getElementById('rotYVal').textContent = '0°';
+  document.getElementById('rotZVal').textContent = '0°';
+
+  applyTransform();
+
+  modelCenter.set(0, size.y * meshDisplayScale / 2, 0);
+  sph.r = maxDim * meshDisplayScale * 2.2;
   sph.theta = 0.5; sph.phi = 1.1;
   defaultSph = { theta: sph.theta, phi: sph.phi, r: sph.r };
   applyCamera();
 
   gridHelper.position.y = 0;
 
-  // Volume + supports
-  modelVolumeCm3 = volumeMm3(pos) / 1000;
-  supportSurcharge = calcSupportSurcharge(pos, nor);
   document.getElementById('viewerEmpty').style.display = 'none';
+  document.getElementById('transformSection').style.display = '';
+  updateQuote();
+}
+
+// ─── Transform ────────────────────────────────────────────────────────────────
+function applyTransform() {
+  if (!currentMesh || !baseDims) return;
+
+  const s = meshDisplayScale * userScale;
+  currentMesh.scale.set(s, s, s);
+  currentMesh.rotation.set(
+    modelRotDeg.x * Math.PI / 180,
+    modelRotDeg.y * Math.PI / 180,
+    modelRotDeg.z * Math.PI / 180
+  );
+
+  // Live dimension display
+  const w = (baseDims.x * userScale).toFixed(1);
+  const h = (baseDims.y * userScale).toFixed(1);
+  const d = (baseDims.z * userScale).toFixed(1);
+  document.getElementById('dimDisplay').textContent = `${w} × ${h} × ${d} mm`;
+
+  // Volume scales as cube of linear scale
+  modelVolumeCm3 = baseVolumeCm3 !== null ? baseVolumeCm3 * (userScale ** 3) : null;
   updateQuote();
 }
 
@@ -1239,6 +1395,31 @@ function updateQuote() {
       </div>
     </div>`;
 }
+
+// ─── Transform UI Events ──────────────────────────────────────────────────────
+document.getElementById('scaleInput').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  if (!isNaN(v) && v >= 1) { userScale = v / 100; applyTransform(); }
+});
+
+['X','Y','Z'].forEach(axis => {
+  document.getElementById('rot' + axis + 'Slider').addEventListener('input', e => {
+    modelRotDeg[axis.toLowerCase()] = +e.target.value;
+    document.getElementById('rot' + axis + 'Val').textContent = e.target.value + '°';
+    applyTransform();
+  });
+});
+
+document.getElementById('resetTransformBtn').addEventListener('click', () => {
+  userScale = 1.0;
+  modelRotDeg = { x: 0, y: 0, z: 0 };
+  document.getElementById('scaleInput').value = 100;
+  ['X','Y','Z'].forEach(axis => {
+    document.getElementById('rot' + axis + 'Slider').value = 0;
+    document.getElementById('rot' + axis + 'Val').textContent = '0°';
+  });
+  applyTransform();
+});
 
 // ─── UI Events ────────────────────────────────────────────────────────────────
 document.getElementById('matGrid').addEventListener('click', e => {
