@@ -640,6 +640,7 @@
         <thead>
           <tr>
             <th>Order</th>
+            <th>Customer</th>
             <th>Date</th>
             <th>Status</th>
             <th>Items</th>
@@ -744,7 +745,8 @@ function filteredAndSorted() {
   let rows = allOrders.filter(o => {
     if (activeFilter !== 'all' && o.status !== activeFilter) return false;
     if (search) {
-      const haystack = `#${pad(o.id)} ${o.id} ${o.status}`.toLowerCase();
+      const custStr  = `${o.customer_first_name || ''} ${o.customer_last_name || ''} ${o.customer_email || ''}`;
+    const haystack = `#${pad(o.id)} ${o.id} ${o.status} ${custStr}`.toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;
@@ -786,9 +788,18 @@ function renderList() {
       ? items.map(i => `${i.name ? i.name.replace('.stl','') : '?'}`).join(', ')
       : '—';
 
+    const custName = o.customer_first_name
+      ? `${o.customer_first_name} ${o.customer_last_name}`
+      : '—';
+    const custEmail = o.customer_email || '';
+
     return `
       <tr data-id="${o.id}" class="${o.id === activeOrderId ? 'selected' : ''}">
         <td class="order-id-cell">#${pad(o.id)}</td>
+        <td style="font-size:0.68rem;line-height:1.45">
+          <div>${custName}</div>
+          <div style="color:var(--muted);font-size:0.62rem">${custEmail}</div>
+        </td>
         <td class="order-date-cell">${fmt(o.created_at)}</td>
         <td>${statusBadge(o.status)}</td>
         <td class="order-items-cell" title="${itemSummary}">${items.length} item${items.length !== 1 ? 's' : ''}</td>
@@ -889,6 +900,23 @@ function renderDetail(order) {
         <span class="dr-label">STL files</span>
         <span class="dr-val">${order.files.length}</span>
       </div>
+    </div>
+
+    <!-- Customer -->
+    <div class="detail-block">
+      <div class="detail-block-label">Customer</div>
+      ${order.customer_email ? `
+        <div class="detail-row">
+          <span class="dr-label">Name</span>
+          <span class="dr-val">${order.customer_first_name || ''} ${order.customer_last_name || ''}</span>
+        </div>
+        <div class="detail-row">
+          <span class="dr-label">Email</span>
+          <span class="dr-val"><a href="mailto:${order.customer_email}" style="color:var(--accent)">${order.customer_email}</a></span>
+        </div>
+        ${order.customer_phone ? `<div class="detail-row"><span class="dr-label">Phone</span><span class="dr-val">${order.customer_phone}</span></div>` : ''}
+        ${order.customer_address1 ? `<div class="detail-row"><span class="dr-label">Ship to</span><span class="dr-val">${[order.customer_address1, order.customer_address2, order.customer_city, order.customer_postcode, order.customer_country].filter(Boolean).join(', ')}</span></div>` : ''}
+      ` : '<span class="notes-empty">No customer on record</span>'}
     </div>
 
     <!-- Items -->

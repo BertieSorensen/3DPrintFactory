@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Complete your 3D print order — enter your shipping and payment details.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self';">
   <title>Checkout — 3DPrintFactory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -405,63 +405,26 @@
             <span class="step-badge">3</span> PAYMENT
           </div>
 
-          <div class="payment-icons" aria-label="Accepted payment methods">
-            <span class="payment-icon">VISA</span>
-            <span class="payment-icon">MC</span>
-            <span class="payment-icon">AMEX</span>
-            <span class="payment-icon">MAESTRO</span>
-            <span class="secure-badge" aria-label="Secure checkout">&#x1F512; SSL Secured</span>
-          </div>
-
           <div id="paymentError" class="form-error-banner" role="alert"></div>
 
-          <div class="form-group">
-            <label class="form-label" for="cardName">Name on card *</label>
-            <input class="form-input" type="text" id="cardName" name="cardName"
-                   autocomplete="cc-name" maxlength="60" required
-                   aria-required="true" aria-describedby="cardNameErr">
-            <span class="form-error" id="cardNameErr" role="alert"></span>
+          <!-- Stripe Payment Element — placeholder until keys are configured -->
+          <div style="background:var(--surface2);border:1px dashed var(--border);padding:22px 18px;margin-bottom:16px;text-align:center">
+            <p style="font-size:0.7rem;letter-spacing:0.12em;color:var(--text-muted);margin-bottom:6px">
+              &#x1F512; SECURE CARD PAYMENT &mdash; POWERED BY STRIPE
+            </p>
+            <p style="font-size:0.62rem;color:var(--text-dim);letter-spacing:0.06em">
+              Card payment will appear here. Your card details are never stored on our server.
+            </p>
           </div>
-
-          <div class="form-group">
-            <label class="form-label" for="cardNumber">Card number *</label>
-            <input class="form-input" type="text" id="cardNumber" name="cardNumber"
-                   autocomplete="cc-number" inputmode="numeric"
-                   maxlength="19" placeholder="0000 0000 0000 0000" required
-                   aria-required="true" aria-describedby="cardNumberErr">
-            <span class="form-error" id="cardNumberErr" role="alert"></span>
-          </div>
-
-          <div class="card-field-group">
-            <div class="form-group span2">
-              <label class="form-label" for="cardExpiry">Expiry date *</label>
-              <input class="form-input" type="text" id="cardExpiry" name="cardExpiry"
-                     autocomplete="cc-exp" inputmode="numeric"
-                     maxlength="5" placeholder="MM/YY" required
-                     aria-required="true" aria-describedby="cardExpiryErr">
-              <span class="form-error" id="cardExpiryErr" role="alert"></span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="cardCvv">CVV *</label>
-              <input class="form-input" type="text" id="cardCvv" name="cardCvv"
-                     autocomplete="cc-csc" inputmode="numeric"
-                     maxlength="4" placeholder="000" required
-                     aria-required="true" aria-describedby="cardCvvErr">
-              <span class="form-error" id="cardCvvErr" role="alert"></span>
-            </div>
-          </div>
-
-          <p class="form-hint" style="margin-top:6px">
-            &#9432; This is a demo checkout. No real payment will be processed.
-            Do not enter real card details.
+          <p class="form-hint" style="margin-bottom:14px">
+            We'll email you an invoice while card payments are being set up.
           </p>
 
           <div class="checkbox-row">
             <input type="checkbox" id="agreeTerms" name="agreeTerms" required aria-required="true">
             <label for="agreeTerms">
               I agree to the <a href="faq.html#terms">Terms of Service</a> and
-              <a href="faq.html#privacy">Privacy Policy</a>, and confirm I am
-              authorised to use this payment method.
+              <a href="faq.html#privacy">Privacy Policy</a>.
             </label>
           </div>
           <span class="form-error" id="agreeTermsErr" role="alert"></span>
@@ -543,45 +506,13 @@ function renderSummary() {
 
 renderSummary();
 
-/* ─── Input formatters ──────────────────────────────────────────────────── */
-const cardNumberInput = document.getElementById('cardNumber');
-if (cardNumberInput) {
-  cardNumberInput.addEventListener('input', e => {
-    let val = e.target.value.replace(/\D/g, '').slice(0, 16);
-    // Insert spaces every 4 digits
-    val = val.replace(/(.{4})/g, '$1 ').trim();
-    e.target.value = val;
-  });
-}
-
-const cardExpiryInput = document.getElementById('cardExpiry');
-if (cardExpiryInput) {
-  cardExpiryInput.addEventListener('input', e => {
-    let val = e.target.value.replace(/\D/g, '').slice(0, 4);
-    if (val.length >= 3) val = val.slice(0, 2) + '/' + val.slice(2);
-    e.target.value = val;
-  });
-}
-
-const cardCvvInput = document.getElementById('cardCvv');
-if (cardCvvInput) {
-  cardCvvInput.addEventListener('input', e => {
-    e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
-  });
-}
-
 /* ─── Validation helpers ─────────────────────────────────────────────────── */
 function setError(fieldId, errId, msg) {
   const field = document.getElementById(fieldId);
   const err   = document.getElementById(errId);
   if (!field || !err) return;
-  if (msg) {
-    field.classList.add('error');
-    err.textContent = msg; // safe — no HTML
-  } else {
-    field.classList.remove('error');
-    err.textContent = '';
-  }
+  if (msg) { field.classList.add('error'); err.textContent = msg; }
+  else     { field.classList.remove('error'); err.textContent = ''; }
 }
 
 function clearErrors() {
@@ -590,50 +521,17 @@ function clearErrors() {
   document.querySelectorAll('.form-error-banner').forEach(b => b.classList.remove('visible'));
 }
 
-/* Safe text value: trim + limit length */
 function safeVal(id, max) {
   const el = document.getElementById(id);
   return el ? el.value.trim().slice(0, max) : '';
 }
 
-/* UK postcode pattern */
 const UK_POSTCODE_RE = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[ABD-HJLNP-UW-Z]{2}$/i;
-
-/* Basic email pattern (RFC-5321 compliant enough for UI) */
-const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
-
-/* Luhn check for card numbers */
-function luhnCheck(num) {
-  const digits = num.replace(/\s/g, '');
-  if (!/^\d{13,19}$/.test(digits)) return false;
-  let sum = 0;
-  let alt = false;
-  for (let i = digits.length - 1; i >= 0; i--) {
-    let d = parseInt(digits[i], 10);
-    if (alt) { d *= 2; if (d > 9) d -= 9; }
-    sum += d;
-    alt = !alt;
-  }
-  return sum % 10 === 0;
-}
-
-function validateExpiry(val) {
-  if (!/^\d{2}\/\d{2}$/.test(val)) return 'Enter expiry as MM/YY.';
-  const [mm, yy] = val.split('/').map(Number);
-  if (mm < 1 || mm > 12) return 'Invalid month.';
-  const now     = new Date();
-  const expYear = 2000 + yy;
-  const expMonth = mm; // 1-indexed
-  if (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < now.getMonth() + 1)) {
-    return 'Card has expired.';
-  }
-  return null;
-}
+const EMAIL_RE       = /^[^\s@]{1,64}@[^\s@]{1,255}\.[^\s@]{2,}$/;
 
 /* ─── Form Submission ────────────────────────────────────────────────────── */
-document.getElementById('submitBtn').addEventListener('click', () => {
+document.getElementById('submitBtn').addEventListener('click', async () => {
   clearErrors();
-
   let valid = true;
 
   // Contact
@@ -642,17 +540,17 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   const email     = safeVal('email', 254);
   const phone     = safeVal('phone', 20);
 
-  if (!firstName)           { setError('firstName', 'firstNameErr', 'First name is required.'); valid = false; }
-  if (!lastName)            { setError('lastName',  'lastNameErr',  'Last name is required.');  valid = false; }
-  if (!email)               { setError('email', 'emailErr', 'Email address is required.');      valid = false; }
+  if (!firstName) { setError('firstName', 'firstNameErr', 'First name is required.'); valid = false; }
+  if (!lastName)  { setError('lastName',  'lastNameErr',  'Last name is required.');  valid = false; }
+  if (!email)     { setError('email', 'emailErr', 'Email address is required.');      valid = false; }
   else if (!EMAIL_RE.test(email)) { setError('email', 'emailErr', 'Please enter a valid email address.'); valid = false; }
-
   if (phone && !/^[\d\s\+\-\(\)]{7,20}$/.test(phone)) {
     setError('phone', 'phoneErr', 'Phone number format is invalid.'); valid = false;
   }
 
   // Shipping
   const address1 = safeVal('address1', 100);
+  const address2 = safeVal('address2', 100);
   const city     = safeVal('city', 80);
   const postcode = safeVal('postcode', 10);
   const country  = document.getElementById('country').value;
@@ -665,64 +563,57 @@ document.getElementById('submitBtn').addEventListener('click', () => {
     setError('postcode', 'postcodeErr', 'Enter a valid UK postcode (e.g. SW1A 1AA).'); valid = false;
   }
 
-  // Payment
-  const cardName   = safeVal('cardName', 60);
-  const cardNumber = safeVal('cardNumber', 19);
-  const cardExpiry = safeVal('cardExpiry', 5);
-  const cardCvv    = safeVal('cardCvv', 4);
-  const agreed     = document.getElementById('agreeTerms').checked;
-
-  if (!cardName)   { setError('cardName', 'cardNameErr', 'Name on card is required.');       valid = false; }
-  if (!cardNumber) { setError('cardNumber', 'cardNumberErr', 'Card number is required.');     valid = false; }
-  else if (!luhnCheck(cardNumber)) { setError('cardNumber', 'cardNumberErr', 'Invalid card number.'); valid = false; }
-
-  const expiryErr = validateExpiry(cardExpiry);
-  if (expiryErr) { setError('cardExpiry', 'cardExpiryErr', expiryErr); valid = false; }
-
-  if (!cardCvv || !/^\d{3,4}$/.test(cardCvv)) {
-    setError('cardCvv', 'cardCvvErr', 'Enter a valid 3 or 4 digit CVV.'); valid = false;
-  }
-
-  if (!agreed) {
+  if (!document.getElementById('agreeTerms').checked) {
     document.getElementById('agreeTermsErr').textContent = 'You must agree to the terms to continue.';
     valid = false;
   }
 
   if (!valid) {
-    // Scroll to first error
     const firstErr = document.querySelector('.form-input.error, .form-error:not(:empty)');
     if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 
-  /* ── Save order reference & clear cart ── */
-  const orderId = generateOrderId();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled    = true;
+  btn.textContent = 'PLACING ORDER…';
 
-  // Store just enough for the confirmation page (no card data)
+  const payload = {
+    customer: { firstName, lastName, email, phone, address1, address2, city, postcode, country },
+    notes,
+    items: cartState,
+    total: Cart.cartGrandTotal(cartState).toFixed(2),
+  };
+
   try {
-    sessionStorage.setItem('3dpf_order', JSON.stringify({
-      orderId,
-      firstName,
-      lastName,
-      email,
-      address:  `${address1}, ${city}, ${postcode}`,
-      items:    cartState.length,
-      total:    Cart.cartGrandTotal(cartState).toFixed(2),
-    }));
-  } catch { /* ignore storage errors */ }
+    const res  = await fetch('/api/orders', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ data: JSON.stringify(payload) }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Order failed');
 
-  Cart.cartClear();
+    try {
+      sessionStorage.setItem('3dpf_order', JSON.stringify({
+        orderId:   '#' + String(data.orderId).padStart(5, '0'),
+        firstName, lastName, email,
+        address:   `${address1}, ${city}, ${postcode}`,
+        items:     cartState.length,
+        total:     payload.total,
+      }));
+    } catch { /* ignore */ }
 
-  // Redirect to confirmation
-  window.location.href = 'order-confirmation.html';
+    Cart.cartClear();
+    window.location.href = 'order-confirmation.html';
+  } catch (err) {
+    const banner = document.getElementById('paymentError');
+    banner.textContent = 'Order failed: ' + err.message;
+    banner.classList.add('visible');
+    btn.disabled    = false;
+    btn.textContent = 'PLACE ORDER →';
+  }
 });
-
-function generateOrderId() {
-  // Combine timestamp + random hex for a short unique order reference
-  const ts  = Date.now().toString(36).toUpperCase();
-  const rnd = Math.random().toString(36).slice(2, 7).toUpperCase();
-  return `3DF-${ts}-${rnd}`;
-}
 </script>
 <script src="js/nav.js"></script>
 </body>
