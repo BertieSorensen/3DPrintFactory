@@ -4,46 +4,56 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="3DPrintFactory — professional FDM 3D printing on demand. Upload your STL file, get an instant quote, and receive precision-printed parts delivered to your door.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self';">
   <title>3DPrintFactory — Professional 3D Printing On Demand</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <style>
-    /* ── Hero ── */
-    .hero {
-      min-height:      calc(100vh - 56px);
+    /* ── Hero: 200vh scroll room; frame pinned by JS ── */
+    .hero-scroll { height: 200vh; position: relative; }
+
+    .hero-frame {
+      height:   calc(100vh - 56px);
+      overflow: hidden;
+    }
+
+    #heroCanvas {
+      position: absolute;
+      inset:    0;
+      width:    100%;
+      height:   100%;
+      display:  block;
+      cursor:   grab;
+    }
+    #heroCanvas:active { cursor: grabbing; }
+
+    /* subtle grid overlay */
+    .hero-frame::before {
+      content:          '';
+      position:         absolute;
+      inset:            0;
+      background-image:
+        linear-gradient(rgba(255,98,0,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,98,0,0.025) 1px, transparent 1px);
+      background-size:  60px 60px;
+      pointer-events:   none;
+      z-index:          1;
+    }
+
+    /* text overlay – fades as you scroll */
+    .hero-overlay {
+      position:        absolute;
+      inset:           0;
+      z-index:         2;
       display:         flex;
       flex-direction:  column;
       align-items:     center;
       justify-content: center;
       text-align:      center;
-      padding:         48px 24px;
-      position:        relative;
-      overflow:        hidden;
-    }
-
-    .hero::before {
-      content:          '';
-      position:         absolute;
-      inset:            0;
-      background-image:
-        linear-gradient(rgba(255,98,0,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,98,0,0.04) 1px, transparent 1px);
-      background-size:  60px 60px;
-      pointer-events:   none;
-    }
-
-    .hero::after {
-      content:    '';
-      position:   absolute;
-      width:      600px;
-      height:     600px;
-      background: radial-gradient(circle, rgba(255,98,0,0.06) 0%, transparent 70%);
-      top:        50%;
-      left:       50%;
-      transform:  translate(-50%, -50%);
-      pointer-events: none;
+      padding:         40px 24px 80px;
+      background:      radial-gradient(ellipse at center, rgba(0,0,0,0.60) 0%, transparent 68%);
+      will-change:     opacity, transform;
     }
 
     .hero-eyebrow {
@@ -52,54 +62,78 @@
       text-transform: uppercase;
       color:          var(--accent);
       margin-bottom:  20px;
-      position:       relative;
-      z-index:        1;
     }
 
-    .hero h1 {
-      font-family:  var(--display);
-      font-size:    clamp(3.2rem, 8vw, 7.5rem);
-      line-height:  0.92;
+    .hero-overlay h1 {
+      font-family:    var(--display);
+      font-size:      clamp(3.2rem, 8vw, 7.5rem);
+      line-height:    0.92;
       letter-spacing: 0.04em;
-      position:     relative;
-      z-index:      1;
-      max-width:    900px;
+      max-width:      900px;
     }
 
-    .hero h1 .accent-line { color: var(--accent); }
+    .hero-overlay h1 .accent-line { color: var(--accent); }
 
     .hero-sub {
-      font-size:   clamp(0.82rem, 2vw, 0.95rem);
-      color:       var(--text-muted);
-      max-width:   520px;
-      margin-top:  20px;
-      line-height: 1.8;
+      font-size:      clamp(0.82rem, 2vw, 0.95rem);
+      color:          var(--text-muted);
+      max-width:      520px;
+      margin-top:     20px;
+      line-height:    1.8;
       letter-spacing: 0.04em;
-      position:    relative;
-      z-index:     1;
     }
 
     .hero-actions {
-      display:     flex;
-      gap:         12px;
-      margin-top:  36px;
-      flex-wrap:   wrap;
+      display:         flex;
+      gap:             12px;
+      margin-top:      36px;
+      flex-wrap:       wrap;
       justify-content: center;
-      position:    relative;
-      z-index:     1;
     }
 
-    .hero-stats {
+    /* scroll hint */
+    .scroll-hint {
+      position:       absolute;
+      bottom:         24px;
+      left:           50%;
+      transform:      translateX(-50%);
+      z-index:        3;
+      display:        flex;
+      flex-direction: column;
+      align-items:    center;
+      gap:            6px;
+      pointer-events: none;
+    }
+    .scroll-hint span {
+      font-size:      0.52rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color:          var(--text-muted);
+    }
+    .scroll-hint .arrow {
+      width:      1px;
+      height:     32px;
+      background: linear-gradient(to bottom, var(--text-muted), transparent);
+      animation:  scrollPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%,100% { opacity: 0.3; }
+      50%      { opacity: 1;   }
+    }
+
+    /* stats bar below the hero scroll section */
+    .stats-bar {
       display:    flex;
-      gap:        48px;
-      margin-top: 72px;
-      position:   relative;
-      z-index:    1;
       flex-wrap:  wrap;
-      justify-content: center;
     }
-
-    .stat-item { text-align: center; }
+    .stats-bar .stat-item {
+      flex:         1;
+      min-width:    140px;
+      text-align:   center;
+      padding:      28px 16px;
+      border-right: 1px solid var(--border);
+    }
+    .stats-bar .stat-item:last-child { border-right: none; }
 
     .stat-num {
       font-family:    var(--display);
@@ -323,37 +357,48 @@
 
 <main>
 
-  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
-  <section class="hero" aria-label="Hero">
-    <p class="hero-eyebrow">&#x2B22; Professional FDM 3D Printing</p>
-    <h1>PRECISION<br><span class="accent-line">3D PRINTS</span><br>ON DEMAND</h1>
-    <p class="hero-sub">
-      Upload your STL file, configure your print, and get an instant quote.
-      We print and ship within days — straight to your door.
-    </p>
-    <div class="hero-actions">
-      <a href="quote.html" class="btn btn-primary btn-lg">GET INSTANT QUOTE &rarr;</a>
-      <a href="faq.html" class="btn btn-outline btn-lg">HOW IT WORKS</a>
-    </div>
-    <div class="hero-stats">
-      <div class="stat-item">
-        <div class="stat-num">4</div>
-        <div class="stat-label">Materials</div>
+  <!-- ── Hero (200vh scroll room; Three.js viewer behind text) ───────────── -->
+  <div class="hero-scroll" id="heroScroll">
+    <div class="hero-frame" id="heroFrame">
+      <canvas id="heroCanvas" aria-hidden="true"></canvas>
+      <div class="hero-overlay" id="heroOverlay">
+        <p class="hero-eyebrow">&#x2B22; Professional FDM 3D Printing</p>
+        <h1>PRECISION<br><span class="accent-line">3D PRINTS</span><br>ON DEMAND</h1>
+        <p class="hero-sub">
+          Upload your STL file, configure your print, and get an instant quote.
+          We print and ship within days — straight to your door.
+        </p>
+        <div class="hero-actions">
+          <a href="quote.html" class="btn btn-primary btn-lg">GET INSTANT QUOTE &rarr;</a>
+          <a href="faq.html" class="btn btn-outline btn-lg">HOW IT WORKS</a>
+        </div>
       </div>
-      <div class="stat-item">
-        <div class="stat-num">48H</div>
-        <div class="stat-label">Typical Dispatch</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">0.1mm</div>
-        <div class="stat-label">Layer Resolution</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Quality Checked</div>
+      <div class="scroll-hint" id="scrollHint" aria-hidden="true">
+        <span>Scroll</span>
+        <div class="arrow"></div>
       </div>
     </div>
-  </section>
+  </div>
+
+  <!-- ── Stats bar ──────────────────────────────────────────────────────── -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Materials</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">48H</div>
+      <div class="stat-label">Typical Dispatch</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0.1mm</div>
+      <div class="stat-label">Layer Resolution</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Quality Checked</div>
+    </div>
+  </div>
 
   <hr class="section-divider">
 
@@ -532,7 +577,125 @@
 <!-- Footer -->
 <div id="footer-mount"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/nav.js"></script>
+<script>
+'use strict';
+
+/* ── Three.js viewer ─────────────────────────────────────────────────────── */
+const NAV_H      = 56;
+const heroScroll  = document.getElementById('heroScroll');
+const heroFrame   = document.getElementById('heroFrame');
+const heroOverlay = document.getElementById('heroOverlay');
+const scrollHint  = document.getElementById('scrollHint');
+const heroCanvas  = document.getElementById('heroCanvas');
+
+const renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0d0d0d, 1);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50000);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+sun.position.set(2, 4, 3);
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xff6200, 0.5);
+rim.position.set(-3, -1, -2);
+scene.add(rim);
+scene.add(new THREE.GridHelper(400, 30, 0x333333, 0x1e1e1e));
+
+/* Rotating demo model */
+const demoMesh = new THREE.Mesh(
+  new THREE.TorusKnotGeometry(55, 18, 128, 24, 2, 3),
+  new THREE.MeshStandardMaterial({ color: 0xff6200, roughness: 0.45, metalness: 0.1 })
+);
+scene.add(demoMesh);
+
+let sph = { theta: 0.5, phi: 1.1, r: 320 };
+function applyCamera() {
+  camera.position.set(
+    sph.r * Math.sin(sph.phi) * Math.sin(sph.theta),
+    sph.r * Math.cos(sph.phi),
+    sph.r * Math.sin(sph.phi) * Math.cos(sph.theta)
+  );
+  camera.lookAt(0, 0, 0);
+}
+applyCamera();
+
+/* Orbit controls */
+let dragging = false, prev = { x: 0, y: 0 };
+heroCanvas.addEventListener('mousedown', e => { dragging = true; prev = { x: e.clientX, y: e.clientY }; e.preventDefault(); });
+window.addEventListener('mouseup', () => { dragging = false; });
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  sph.theta -= (e.clientX - prev.x) * 0.006;
+  sph.phi    = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (e.clientY - prev.y) * 0.006));
+  prev = { x: e.clientX, y: e.clientY };
+  applyCamera();
+});
+heroCanvas.addEventListener('wheel', e => {
+  sph.r = Math.max(sph.r * 0.05, Math.min(sph.r * 20, sph.r * (1 + e.deltaY * 0.001)));
+  applyCamera();
+  e.preventDefault();
+}, { passive: false });
+let lt = null;
+heroCanvas.addEventListener('touchstart', e => { lt = e.touches[0]; e.preventDefault(); }, { passive: false });
+heroCanvas.addEventListener('touchmove', e => {
+  if (!lt) return;
+  const t = e.touches[0];
+  sph.theta -= (t.clientX - lt.clientX) * 0.006;
+  sph.phi    = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (t.clientY - lt.clientY) * 0.006));
+  lt = t;
+  applyCamera();
+  e.preventDefault();
+}, { passive: false });
+
+/* Render loop */
+(function animate() {
+  requestAnimationFrame(animate);
+  demoMesh.rotation.y += 0.004;
+  demoMesh.rotation.x += 0.001;
+  const w = heroFrame.clientWidth, h = heroFrame.clientHeight;
+  if (renderer.domElement.width !== w || renderer.domElement.height !== h) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  renderer.render(scene, camera);
+})();
+
+/* ── Scroll: pin frame, fade overlay ────────────────────────────────────── */
+function syncHero() {
+  const scrollY    = window.scrollY;
+  const sectionTop = heroScroll.getBoundingClientRect().top + scrollY;
+  const maxScroll  = heroScroll.offsetHeight - window.innerHeight; // ~100vh
+
+  /* pin frame to viewport while inside the section, then release */
+  if (scrollY >= sectionTop + maxScroll) {
+    heroFrame.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:calc(100vh - ' + NAV_H + 'px);overflow:hidden;';
+  } else {
+    heroFrame.style.cssText = 'position:fixed;top:' + NAV_H + 'px;left:0;right:0;height:calc(100vh - ' + NAV_H + 'px);overflow:hidden;';
+  }
+
+  /* fade the text overlay: starts immediately, done at 60% of scroll room */
+  const scrolled = Math.max(0, scrollY - sectionTop);
+  const fade     = Math.min(1, (scrolled / maxScroll) / 0.6);
+
+  heroOverlay.style.opacity       = 1 - fade;
+  heroOverlay.style.transform     = 'translateY(' + (-fade * 20) + 'px)';
+  heroOverlay.style.pointerEvents = fade > 0.5 ? 'none' : 'auto';
+  scrollHint.style.opacity        = Math.max(0, 1 - fade * 4);
+}
+
+/* initialise frame as fixed */
+heroFrame.style.cssText = 'position:fixed;top:' + NAV_H + 'px;left:0;right:0;height:calc(100vh - ' + NAV_H + 'px);overflow:hidden;';
+
+window.addEventListener('scroll', syncHero, { passive: true });
+window.addEventListener('resize', syncHero, { passive: true });
+syncHero();
+</script>
 </body>
 </html>
