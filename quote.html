@@ -2,10 +2,1354 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=index.html">
-  <title>Redirecting…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrintQuote — Instant 3D Print Estimator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #161616;
+      --border: #242424;
+      --accent: #ff6200;
+      --accent-glow: rgba(255,98,0,0.18);
+      --accent-dim: rgba(255,98,0,0.08);
+      --text: #f0f0e8;
+      --muted: #888;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Bebas Neue', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-family: var(--display);
+      font-size: 1.7rem;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    header .tagline {
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    header .dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-left: auto;
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Layout ── */
+    .app {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Panel ── */
+    .panel {
+      width: 300px;
+      min-width: 300px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .section {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #aaa;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Upload Zone ── */
+    .upload-zone {
+      border: 1px dashed var(--border);
+      padding: 24px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: var(--accent-dim);
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .upload-zone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin-bottom: 6px;
+      line-height: 1;
+    }
+
+    .upload-zone p {
+      font-size: 0.72rem;
+      color: #999;
+      line-height: 1.6;
+    }
+
+    .file-name {
+      color: var(--accent);
+      font-size: 0.72rem;
+      margin-top: 8px;
+      word-break: break-all;
+      min-height: 0;
+    }
+
+    /* ── Material Buttons ── */
+    .material-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .material-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: #bbb;
+      padding: 10px 10px 8px;
+      cursor: pointer;
+      font-family: var(--mono);
+      transition: all 0.15s;
+      text-align: left;
+    }
+
+    .material-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .material-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+      box-shadow: inset 0 0 12px var(--accent-dim);
+    }
+
+    .mat-name {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .mat-price {
+      font-size: 0.62rem;
+      letter-spacing: 0.05em;
+      color: #888;
+    }
+
+    .material-btn.active .mat-price { color: var(--accent); opacity: 0.7; }
+
+    /* ── Infill Slider ── */
+    .slider-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .slider-label { font-size: 0.72rem; color: #aaa; }
+    .slider-val { font-size: 0.9rem; color: var(--accent); }
+
+    /* ── Quantity ── */
+    .qty-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .qty-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    #qtyInput {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      text-align: center;
+      width: 100%;
+      padding: 5px;
+      -moz-appearance: textfield;
+    }
+
+    #qtyInput::-webkit-outer-spin-button,
+    #qtyInput::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    #qtyInput:focus { outline: none; border-color: var(--accent); }
+
+    input[type=range] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 6px var(--accent);
+    }
+
+    /* ── Quote Box ── */
+    .quote-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 14px;
+    }
+
+    .quote-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-bottom: 7px;
+      line-height: 1.3;
+    }
+
+    .quote-row span:last-child { color: var(--text); }
+
+    .quote-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 10px 0;
+    }
+
+    .quote-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .quote-total .t-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .quote-total .price {
+      font-family: var(--display);
+      font-size: 2.4rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(255,98,0,0.4);
+    }
+
+    .quote-empty {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-align: center;
+      padding: 20px 0;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Price Editors ── */
+    .price-edit {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 6px;
+    }
+
+    .price-edit .pe-label {
+      font-family: var(--display);
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      color: #aaa;
+      width: 44px;
+      flex-shrink: 0;
+    }
+
+    .price-edit input[type=number] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 5px 7px;
+      width: 72px;
+      -moz-appearance: textfield;
+    }
+
+    .price-edit input[type=number]::-webkit-outer-spin-button,
+    .price-edit input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .price-edit input[type=number]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .price-edit .pe-unit {
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+
+    /* ── Add to Cart Button ── */
+    .add-to-cart-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 11px;
+      background: var(--accent);
+      border: none;
+      color: #000;
+      font-family: var(--display);
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .add-to-cart-btn:hover { background: #ff7a20; }
+    .add-to-cart-btn:active { transform: scale(0.98); }
+    .add-to-cart-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    /* ── Cart Badge in Header ── */
+    .cart-toggle {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .cart-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    .cart-badge {
+      background: var(--accent);
+      color: #000;
+      font-family: var(--display);
+      font-size: 0.75rem;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+    }
+
+    /* ── Cart Drawer ── */
+    .cart-drawer {
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 360px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      z-index: 10;
+    }
+
+    .cart-drawer.open { transform: translateX(0); }
+
+    .cart-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .cart-header-title {
+      font-family: var(--display);
+      font-size: 1.3rem;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+
+    .cart-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      width: 28px; height: 28px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .cart-close:hover { border-color: var(--accent); color: var(--accent); }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .cart-empty {
+      padding: 40px 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+    }
+
+    .cart-item {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .cart-item-name {
+      font-size: 0.78rem;
+      color: var(--text);
+      margin-bottom: 5px;
+      padding-right: 24px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-item-meta {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      line-height: 1.7;
+    }
+
+    .cart-item-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cart-item-qty button {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      width: 24px; height: 24px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+
+    .cart-item-qty button:hover { border-color: var(--accent); color: var(--accent); }
+
+    .cart-item-qty span {
+      font-size: 0.8rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .cart-item-price {
+      font-family: var(--display);
+      font-size: 1.2rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+
+    .cart-item-remove {
+      position: absolute;
+      top: 10px; right: 14px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 2px;
+      transition: color 0.15s;
+    }
+
+    .cart-item-remove:hover { color: #ff4444; }
+
+    .cart-footer {
+      border-top: 1px solid var(--border);
+      padding: 14px 18px;
+      flex-shrink: 0;
+    }
+
+    .cart-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .cart-total-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .cart-total-price {
+      font-family: var(--display);
+      font-size: 2rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 20px rgba(255,98,0,0.4);
+    }
+
+    .cart-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .cart-clear-btn {
+      flex: 1;
+      padding: 9px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .cart-clear-btn:hover { border-color: #ff4444; color: #ff4444; }
+
+    .cart-checkout-btn {
+      flex: 2;
+      padding: 9px;
+      background: var(--accent);
+      border: none;
+      color: #000;
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .cart-checkout-btn:hover { background: #ff7a20; }
+    .cart-checkout-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+    .viewer {
+      flex: 1;
+      position: relative;
+      background: #060606;
+      overflow: hidden;
+      cursor: grab;
+    }
+
+    .viewer:active { cursor: grabbing; }
+
+    #canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .viewer-hint {
+      position: absolute;
+      bottom: 14px;
+      right: 16px;
+      font-size: 0.6rem;
+      color: #1f1f1f;
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      text-transform: uppercase;
+    }
+
+    .viewer-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .viewer-empty .ve-big {
+      font-family: var(--display);
+      font-size: 5rem;
+      color: #161616;
+      letter-spacing: 0.3em;
+    }
+
+    .viewer-empty .ve-small {
+      font-size: 0.62rem;
+      letter-spacing: 0.35em;
+      color: #1e1e1e;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    /* Grid overlay on viewer */
+    .viewer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,98,0,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,98,0,0.025) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="index.html">3DPrintFactory</a>&hellip;</p>
+
+<header>
+  <h1>PRINTQUOTE</h1>
+  <span class="tagline">// instant 3d print estimator</span>
+  <button class="cart-toggle" id="cartToggle">
+    CART <span class="cart-badge" id="cartBadge">0</span>
+  </button>
+  <div class="dot"></div>
+</header>
+
+<div class="app">
+  <div class="panel">
+
+    <div class="section">
+      <div class="section-label">01 Upload model</div>
+      <div class="upload-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".stl">
+        <div class="upload-icon">⬡</div>
+        <p>Drop your <strong>.STL</strong> file here<br>or click to browse</p>
+        <div class="file-name" id="fileName"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">02 Material</div>
+      <div class="material-grid" id="matGrid">
+        <button class="material-btn active" data-mat="PLA">
+          <span class="mat-name">PLA</span>
+        </button>
+        <button class="material-btn" data-mat="PETG">
+          <span class="mat-name">PETG</span>
+        </button>
+        <button class="material-btn" data-mat="ABS">
+          <span class="mat-name">ABS</span>
+        </button>
+        <button class="material-btn" data-mat="TPU">
+          <span class="mat-name">TPU</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">03 Infill</div>
+      <div class="slider-row">
+        <span class="slider-label">Infill density</span>
+        <span class="slider-val" id="infillVal">20%</span>
+      </div>
+      <input type="range" id="infillSlider" min="5" max="100" value="20">
+    </div>
+
+    <div class="section">
+      <div class="section-label">04 Quantity</div>
+      <div class="slider-row">
+        <span class="slider-label">Number of copies</span>
+        <span class="slider-val" id="qtyVal">1</span>
+      </div>
+      <div class="qty-row">
+        <button class="qty-btn" id="qtyDown">−</button>
+        <input type="number" id="qtyInput" min="1" max="999" value="1">
+        <button class="qty-btn" id="qtyUp">+</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">05 Quote</div>
+      <div id="quoteBox">
+        <div class="quote-empty">Upload an STL to generate a quote</div>
+      </div>
+      <button class="add-to-cart-btn" id="addToCartBtn" disabled>ADD TO CART</button>
+    </div>
+
+
+
+  </div>
+
+  <div class="viewer" id="viewer">
+    <div class="viewer-empty" id="viewerEmpty">
+      <div class="ve-big">STL</div>
+      <div class="ve-small">Awaiting model upload</div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <div class="viewer-hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom</div>
+
+    <div class="cart-drawer" id="cartDrawer">
+      <div class="cart-header">
+        <span class="cart-header-title">CART</span>
+        <button class="cart-close" id="cartClose">✕</button>
+      </div>
+      <div class="cart-items" id="cartItems">
+        <div class="cart-empty">Your cart is empty</div>
+      </div>
+      <div class="cart-footer">
+        <div class="cart-total-row">
+          <span class="cart-total-label">Order total</span>
+          <span class="cart-total-price" id="cartTotal">£0.00</span>
+        </div>
+        <div class="cart-actions">
+          <button class="cart-clear-btn" id="cartClear">CLEAR</button>
+          <button class="cart-checkout-btn" id="cartCheckout" disabled>CHECKOUT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const materials = {
+  PLA:  { price: 0.05, density: 1.24 },
+  PETG: { price: 0.07, density: 1.27 },
+  ABS:  { price: 0.06, density: 1.05 },
+  TPU:  { price: 0.10, density: 1.21 },
+};
+let currentMaterial = 'PLA';
+let infill = 0.20;
+let quantity = 1;
+let modelVolumeCm3 = null;
+
+// ─── Delivery estimate ────────────────────────────────────────────────────────
+// Weight = effective material volume × density. Add 300g for packaging.
+// Royal Mail Tracked 48 for ≤2kg (£6.33), Evri Standard for heavier.
+// Rates from Royal Mail July 2025 price guide and Evri Jan 2026.
+function deliveryEstimate(effVolCm3, materialKey) {
+  const density = materials[materialKey].density; // g/cm³
+  const printWeightG = effVolCm3 * density;
+  const totalWeightG = printWeightG + 300; // packaging
+  const totalWeightKg = totalWeightG / 1000;
+
+  let courier, cost;
+  if (totalWeightKg <= 2) {
+    courier = 'Royal Mail Tracked 48';
+    cost = 6.33;
+  } else if (totalWeightKg <= 5) {
+    courier = 'Evri Standard';
+    cost = 4.49;
+  } else if (totalWeightKg <= 10) {
+    courier = 'Evri Standard';
+    cost = 5.99;
+  } else if (totalWeightKg <= 15) {
+    courier = 'Evri Standard';
+    cost = 7.49;
+  } else {
+    courier = 'Evri Standard';
+    cost = 7.49; // max band
+  }
+
+  return { courier, cost, totalWeightG: Math.round(totalWeightG) };
+}
+
+// ─── Three.js ────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = false;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50000);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+sun.position.set(2, 4, 3);
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0xff6200, 0.4);
+rim.position.set(-3, -1, -2);
+scene.add(rim);
+const fill = new THREE.DirectionalLight(0x4488ff, 0.2);
+fill.position.set(0, -3, 2);
+scene.add(fill);
+
+// Grid
+const gridHelper = new THREE.GridHelper(400, 30, 0x444444, 0x2a2a2a);
+scene.add(gridHelper);
+
+let currentMesh = null;
+let modelCenter = new THREE.Vector3();
+
+// ─── Orbit Controls (hand-rolled) ────────────────────────────────────────────
+let sph = { theta: 0.5, phi: 1.1, r: 300 };
+
+function applyCamera() {
+  camera.position.set(
+    modelCenter.x + sph.r * Math.sin(sph.phi) * Math.sin(sph.theta),
+    modelCenter.y + sph.r * Math.cos(sph.phi),
+    modelCenter.z + sph.r * Math.sin(sph.phi) * Math.cos(sph.theta)
+  );
+  camera.lookAt(modelCenter);
+}
+applyCamera();
+
+let dragging = false, prev = { x: 0, y: 0 };
+
+canvas.addEventListener('mousedown', e => { dragging = true; prev = { x: e.clientX, y: e.clientY }; e.preventDefault(); });
+window.addEventListener('mouseup', () => { dragging = false; });
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  sph.theta -= (e.clientX - prev.x) * 0.006;
+  sph.phi = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (e.clientY - prev.y) * 0.006));
+  prev = { x: e.clientX, y: e.clientY };
+  applyCamera();
+});
+canvas.addEventListener('wheel', e => {
+  sph.r = Math.max(sph.r * 0.05, Math.min(sph.r * 20, sph.r * (1 + e.deltaY * 0.001)));
+  applyCamera();
+  e.preventDefault();
+}, { passive: false });
+
+// Touch
+let lt = null;
+canvas.addEventListener('touchstart', e => { lt = e.touches[0]; e.preventDefault(); }, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  if (!lt) return;
+  const t = e.touches[0];
+  sph.theta -= (t.clientX - lt.clientX) * 0.006;
+  sph.phi = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (t.clientY - lt.clientY) * 0.006));
+  lt = t; applyCamera(); e.preventDefault();
+}, { passive: false });
+
+// Resize
+function resize() {
+  const v = canvas.parentElement;
+  renderer.setSize(v.clientWidth, v.clientHeight, false);
+  camera.aspect = v.clientWidth / v.clientHeight;
+  camera.updateProjectionMatrix();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  resize();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ─── STL Parser ───────────────────────────────────────────────────────────────
+function parseSTL(buffer) {
+  // Detect ASCII vs binary
+  const peek = new TextDecoder().decode(new Uint8Array(buffer, 0, 80));
+  if (/^\s*solid/i.test(peek)) {
+    const full = new TextDecoder().decode(buffer);
+    if (/facet\s+normal/i.test(full)) return parseASCII(full);
+  }
+  return parseBinary(buffer);
+}
+
+function parseBinary(buf) {
+  const dv = new DataView(buf);
+  const n = dv.getUint32(80, true);
+  const pos = new Float32Array(n * 9);
+  const nor = new Float32Array(n * 9);
+  let off = 84;
+  for (let i = 0; i < n; i++) {
+    const nx = dv.getFloat32(off, true), ny = dv.getFloat32(off+4, true), nz = dv.getFloat32(off+8, true);
+    off += 12;
+    for (let v = 0; v < 3; v++) {
+      const bi = i*9 + v*3;
+      pos[bi]   = dv.getFloat32(off, true);
+      pos[bi+1] = dv.getFloat32(off+4, true);
+      pos[bi+2] = dv.getFloat32(off+8, true);
+      nor[bi] = nx; nor[bi+1] = ny; nor[bi+2] = nz;
+      off += 12;
+    }
+    off += 2;
+  }
+  return { pos, nor };
+}
+
+function parseASCII(text) {
+  const pos = [], nor = [];
+  const frx = /facet\s+normal\s+([\S]+)\s+([\S]+)\s+([\S]+)/g;
+  const vrx = /vertex\s+([\S]+)\s+([\S]+)\s+([\S]+)/g;
+  let fm;
+  while ((fm = frx.exec(text)) !== null) {
+    const nx = +fm[1], ny = +fm[2], nz = +fm[3];
+    for (let v = 0; v < 3; v++) {
+      const vm = vrx.exec(text);
+      if (!vm) break;
+      pos.push(+vm[1], +vm[2], +vm[3]);
+      nor.push(nx, ny, nz);
+    }
+  }
+  return { pos: new Float32Array(pos), nor: new Float32Array(nor) };
+}
+
+// ─── Support estimation ───────────────────────────────────────────────────────
+// Faces with a downward normal beyond 45° need supports.
+// We measure the overhanging area as a fraction of total surface area,
+// then map that to a surcharge multiplier.
+let supportSurcharge = 0; // e.g. 0.15 = 15% added to total
+
+function calcSupportSurcharge(pos, nor) {
+  const OVERHANG_THRESHOLD = -0.707; // cos(135°) — normal pointing more than 45° downward
+  let totalArea = 0;
+  let overhangArea = 0;
+
+  for (let i = 0; i < pos.length; i += 9) {
+    // Triangle vertices
+    const ax=pos[i],   ay=pos[i+1], az=pos[i+2];
+    const bx=pos[i+3], by=pos[i+4], bz=pos[i+5];
+    const cx=pos[i+6], cy=pos[i+7], cz=pos[i+8];
+
+    // Area via cross product
+    const ux=bx-ax, uy=by-ay, uz=bz-az;
+    const vx=cx-ax, vy=cy-ay, vz=cz-az;
+    const area = 0.5 * Math.sqrt(
+      (uy*vz-uz*vy)**2 + (uz*vx-ux*vz)**2 + (ux*vy-uy*vx)**2
+    );
+    totalArea += area;
+
+    // Y component of face normal (up = positive Y in STL convention)
+    const ny = nor[i + 1];
+    if (ny < OVERHANG_THRESHOLD) overhangArea += area;
+  }
+
+  if (totalArea === 0) return 0;
+  const ratio = overhangArea / totalArea; // 0..1
+
+  // Map ratio to a surcharge: 0% overhang = no surcharge, 50%+ overhang = 40% surcharge
+  return Math.min(0.40, ratio * 0.80);
+}
+
+// ─── Volume (divergence theorem) ─────────────────────────────────────────────
+function volumeMm3(pos) {
+  let v = 0;
+  for (let i = 0; i < pos.length; i += 9) {
+    const ax=pos[i], ay=pos[i+1], az=pos[i+2];
+    const bx=pos[i+3], by=pos[i+4], bz=pos[i+5];
+    const cx=pos[i+6], cy=pos[i+7], cz=pos[i+8];
+    v += (ax*(by*cz-bz*cy) + bx*(cy*az-cz*ay) + cx*(ay*bz-az*by)) / 6;
+  }
+  return Math.abs(v);
+}
+
+// ─── Load Model ───────────────────────────────────────────────────────────────
+function loadModel(buffer) {
+  const { pos, nor } = parseSTL(buffer);
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('normal',   new THREE.BufferAttribute(nor, 3));
+
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0xddddcc,
+    specular: 0xff6200,
+    shininess: 40,
+    side: THREE.DoubleSide,
+  });
+
+  if (currentMesh) scene.remove(currentMesh);
+  currentMesh = new THREE.Mesh(geo, mat);
+  scene.add(currentMesh);
+
+  // Center & scale
+  geo.computeBoundingBox();
+  const box = geo.boundingBox;
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const scale = 100 / maxDim;
+
+  currentMesh.scale.setScalar(scale);
+  currentMesh.position.set(-center.x * scale, (-center.y + size.y / 2) * scale, -center.z * scale);
+
+  modelCenter.set(0, size.y * scale / 2, 0);
+  sph.r = maxDim * scale * 2.2;
+  sph.theta = 0.5; sph.phi = 1.1;
+  applyCamera();
+
+  gridHelper.position.y = 0;
+
+  // Volume + supports
+  modelVolumeCm3 = volumeMm3(pos) / 1000;
+  supportSurcharge = calcSupportSurcharge(pos, nor);
+  document.getElementById('viewerEmpty').style.display = 'none';
+  updateQuote();
+}
+
+// ─── Quote ────────────────────────────────────────────────────────────────────
+function updateQuote() {
+  const box = document.getElementById('quoteBox');
+  if (modelVolumeCm3 === null) {
+    box.innerHTML = '<div class="quote-empty">Upload an STL to generate a quote</div>';
+    return;
+  }
+
+  const ppm = materials[currentMaterial].price;
+  const shell    = modelVolumeCm3 * 0.15;
+  const interior = modelVolumeCm3 * 0.85;
+  const effVol   = shell + interior * infill;
+  const matCost  = effVol * ppm * quantity;
+  const setup    = 2.50;
+  const supportCost = (effVol * ppm * quantity) * supportSurcharge;
+  const delivery = deliveryEstimate(effVol * quantity, currentMaterial);
+  const total    = matCost + supportCost + setup + delivery.cost;
+
+  const supportLabel = supportSurcharge === 0
+    ? 'None detected'
+    : supportSurcharge < 0.10 ? 'Light'
+    : supportSurcharge < 0.25 ? 'Moderate'
+    : 'Heavy';
+
+  const supportLine = supportSurcharge > 0
+    ? `<div class="quote-row"><span>Support surcharge (${supportLabel})</span><span>£${supportCost.toFixed(2)}</span></div>`
+    : '';
+
+  const qtyNote = quantity > 1 ? ` ×${quantity}` : '';
+
+  box.innerHTML = `
+    <div class="quote-box">
+      <div class="quote-row"><span>Materials (${currentMaterial}${qtyNote})</span><span>£${(matCost + supportCost).toFixed(2)}</span></div>
+      <div class="quote-row"><span>Setup & delivery</span><span>£${(setup + delivery.cost).toFixed(2)}</span></div>
+      <hr class="quote-divider">
+      <div class="quote-total">
+        <span class="t-label">Estimated total</span>
+        <span class="price">£${total.toFixed(2)}</span>
+      </div>
+    </div>`;
+}
+
+// ─── UI Events ────────────────────────────────────────────────────────────────
+document.getElementById('matGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.material-btn');
+  if (!btn) return;
+  document.querySelectorAll('.material-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentMaterial = btn.dataset.mat;
+  updateQuote();
+});
+
+document.getElementById('infillSlider').addEventListener('input', e => {
+  infill = e.target.value / 100;
+  document.getElementById('infillVal').textContent = e.target.value + '%';
+  updateQuote();
+});
+
+function setQty(val) {
+  quantity = Math.max(1, Math.min(999, Math.round(val) || 1));
+  document.getElementById('qtyInput').value = quantity;
+  document.getElementById('qtyVal').textContent = quantity;
+  updateQuote();
+}
+
+document.getElementById('qtyDown').addEventListener('click', () => setQty(quantity - 1));
+document.getElementById('qtyUp').addEventListener('click',   () => setQty(quantity + 1));
+document.getElementById('qtyInput').addEventListener('input', e => setQty(parseInt(e.target.value)));
+
+
+// File handling
+const fileInput = document.getElementById('fileInput');
+const dropZone  = document.getElementById('dropZone');
+
+fileInput.addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) { document.getElementById('fileName').textContent = f.name; loadFile(f); }
+});
+
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith('.stl')) {
+    document.getElementById('fileName').textContent = f.name;
+    loadFile(f);
+  }
+});
+
+function loadFile(file) {
+  const r = new FileReader();
+  r.onload = e => loadModel(e.target.result);
+  r.readAsArrayBuffer(file);
+}
+
+window.addEventListener('resize', resize);
+
+// ─── Cart ─────────────────────────────────────────────────────────────────────
+// Each cart line stores materials cost only. Setup (£2.50) is charged once per
+// order. Delivery is calculated once on the combined weight of all lines.
+let cart = []; // { id, name, material, qty, infill, supportLabel, effVolPerUnit, matCostPerUnit }
+let nextCartId = 1;
+let currentFileName = '';
+
+const SETUP_FEE = 2.50;
+
+function orderDeliveryAndSetup() {
+  if (cart.length === 0) return 0;
+  const totalEffVol = cart.reduce((s, i) => s + i.effVolPerUnit * i.qty, 0);
+  // Use the heaviest material in the cart for a conservative weight estimate
+  const heaviestDensity = Math.max(...cart.map(i => materials[i.material].density));
+  const fakeKey = Object.keys(materials).find(k => materials[k].density === heaviestDensity) || 'PLA';
+  return SETUP_FEE + deliveryEstimate(totalEffVol, fakeKey).cost;
+}
+
+function getCurrentQuoteData() {
+  if (modelVolumeCm3 === null) return null;
+  const ppm           = materials[currentMaterial].price;
+  const shell         = modelVolumeCm3 * 0.15;
+  const interior      = modelVolumeCm3 * 0.85;
+  const effVol        = shell + interior * infill;
+  const matCostPerUnit = effVol * ppm * (1 + supportSurcharge);
+  const supportLabel  = supportSurcharge === 0 ? 'None'
+    : supportSurcharge < 0.10 ? 'Light'
+    : supportSurcharge < 0.25 ? 'Moderate'
+    : 'Heavy';
+  return {
+    name: currentFileName || 'model.stl',
+    material: currentMaterial,
+    qty: quantity,
+    infill: Math.round(infill * 100),
+    supportLabel,
+    effVolPerUnit: effVol,
+    matCostPerUnit,
+  };
+}
+
+function cartOrderTotal() {
+  const matTotal = cart.reduce((s, i) => s + i.matCostPerUnit * i.qty, 0);
+  return matTotal + orderDeliveryAndSetup();
+}
+
+function renderCart() {
+  const itemsEl    = document.getElementById('cartItems');
+  const totalEl    = document.getElementById('cartTotal');
+  const badgeEl    = document.getElementById('cartBadge');
+  const checkoutEl = document.getElementById('cartCheckout');
+
+  const itemCount = cart.reduce((s, i) => s + i.qty, 0);
+  badgeEl.textContent = itemCount;
+
+  if (cart.length === 0) {
+    itemsEl.innerHTML = '<div class="cart-empty">Your cart is empty</div>';
+    totalEl.textContent = '£0.00';
+    checkoutEl.disabled = true;
+    return;
+  }
+
+  checkoutEl.disabled = false;
+  totalEl.textContent = '£' + cartOrderTotal().toFixed(2);
+
+  const setupDelivery = orderDeliveryAndSetup();
+
+  itemsEl.innerHTML = [
+    ...cart.map(item => `
+      <div class="cart-item" data-id="${item.id}">
+        <button class="cart-item-remove" data-remove="${item.id}" title="Remove">✕</button>
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-meta">
+          ${item.material} &nbsp;·&nbsp; ${item.infill}% infill &nbsp;·&nbsp; Supports: ${item.supportLabel}
+        </div>
+        <div class="cart-item-footer">
+          <div class="cart-item-qty">
+            <button data-qdown="${item.id}">−</button>
+            <span>${item.qty}</span>
+            <button data-qup="${item.id}">+</button>
+          </div>
+          <span class="cart-item-price">£${(item.matCostPerUnit * item.qty).toFixed(2)}</span>
+        </div>
+      </div>`),
+    `<div class="cart-item">
+      <div class="cart-item-name" style="color:var(--muted)">Setup &amp; delivery</div>
+      <div class="cart-item-footer" style="margin-top:4px">
+        <span style="font-size:0.65rem;color:var(--muted)">One charge for the whole order</span>
+        <span class="cart-item-price">£${setupDelivery.toFixed(2)}</span>
+      </div>
+    </div>`
+  ].join('');
+}
+
+// Add to cart
+document.getElementById('addToCartBtn').addEventListener('click', () => {
+  const data = getCurrentQuoteData();
+  if (!data) return;
+
+  const existing = cart.find(i =>
+    i.name === data.name &&
+    i.material === data.material &&
+    i.infill === data.infill &&
+    i.supportLabel === data.supportLabel
+  );
+
+  if (existing) {
+    existing.qty += data.qty;
+  } else {
+    cart.push({ id: nextCartId++, ...data });
+  }
+
+  renderCart();
+
+  const btn = document.getElementById('addToCartBtn');
+  btn.textContent = 'ADDED ✓';
+  btn.style.background = '#22aa55';
+  setTimeout(() => {
+    btn.textContent = 'ADD TO CART';
+    btn.style.background = '';
+  }, 1000);
+});
+
+// Cart drawer open/close
+document.getElementById('cartToggle').addEventListener('click', () => {
+  document.getElementById('cartDrawer').classList.toggle('open');
+});
+document.getElementById('cartClose').addEventListener('click', () => {
+  document.getElementById('cartDrawer').classList.remove('open');
+});
+
+// Cart item interactions (remove, qty)
+document.getElementById('cartItems').addEventListener('click', e => {
+  const removeId = e.target.dataset.remove;
+  const qdownId  = e.target.dataset.qdown;
+  const qupId    = e.target.dataset.qup;
+
+  if (removeId) {
+    cart = cart.filter(i => i.id !== +removeId);
+    renderCart();
+  } else if (qdownId) {
+    const item = cart.find(i => i.id === +qdownId);
+    if (item) {
+      if (item.qty <= 1) {
+        cart = cart.filter(i => i.id !== +qdownId);
+      } else {
+        item.qty--;
+      }
+      renderCart();
+    }
+  } else if (qupId) {
+    const item = cart.find(i => i.id === +qupId);
+    if (item) { item.qty++; renderCart(); }
+  }
+});
+
+// Clear cart
+document.getElementById('cartClear').addEventListener('click', () => {
+  if (cart.length === 0) return;
+  if (confirm('Clear all items from the cart?')) { cart = []; renderCart(); }
+});
+
+// Checkout placeholder
+document.getElementById('cartCheckout').addEventListener('click', () => {
+  const total = cartOrderTotal();
+  alert(`Order summary: ${cart.length} line(s), total £${total.toFixed(2)}.\n\nIntegrate your payment or order management system here.`);
+});
+
+// Enable add-to-cart once a model is loaded — patched into updateQuote
+const _origUpdateQuote = updateQuote;
+updateQuote = function() {
+  _origUpdateQuote();
+  document.getElementById('addToCartBtn').disabled = (modelVolumeCm3 === null);
+};
+
+// Track current filename for cart labels
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) currentFileName = e.target.files[0].name;
+});
+
+</script>
 </body>
 </html>

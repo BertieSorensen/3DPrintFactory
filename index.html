@@ -4,56 +4,104 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="3DPrintFactory — professional FDM 3D printing on demand. Upload your STL file, get an instant quote, and receive precision-printed parts delivered to your door.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'self';">
   <title>3DPrintFactory — Professional 3D Printing On Demand</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
   <style>
-    /* ── Hero: 200vh scroll room; frame pinned by JS ── */
-    .hero-scroll { height: 200vh; position: relative; }
-
-    .hero-frame {
-      height:   calc(100vh - 56px);
-      overflow: hidden;
+    /* ── Hero ── */
+    .hero {
+      position:        relative;
+      min-height:      calc(100vh - 56px);
+      display:         flex;
+      align-items:     center;
+      justify-content: center;
+      overflow:        hidden;
+      background:      var(--bg);
     }
 
-    #heroCanvas {
-      position: absolute;
-      inset:    0;
-      width:    100%;
-      height:   100%;
-      display:  block;
-      cursor:   grab;
-    }
-    #heroCanvas:active { cursor: grabbing; }
-
-    /* subtle grid overlay */
-    .hero-frame::before {
+    /* CSS grid overlay */
+    .hero::before {
       content:          '';
       position:         absolute;
       inset:            0;
       background-image:
-        linear-gradient(rgba(255,98,0,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,98,0,0.025) 1px, transparent 1px);
+        linear-gradient(rgba(255,98,0,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,98,0,0.03) 1px, transparent 1px);
       background-size:  60px 60px;
       pointer-events:   none;
-      z-index:          1;
+      animation:        gridSlide 20s linear infinite;
     }
 
-    /* text overlay – fades as you scroll */
-    .hero-overlay {
-      position:        absolute;
-      inset:           0;
-      z-index:         2;
-      display:         flex;
-      flex-direction:  column;
-      align-items:     center;
-      justify-content: center;
-      text-align:      center;
-      padding:         40px 24px 80px;
-      background:      radial-gradient(ellipse at center, rgba(0,0,0,0.60) 0%, transparent 68%);
-      will-change:     opacity, transform;
+    @keyframes gridSlide {
+      from { background-position: 0 0; }
+      to   { background-position: 60px 60px; }
+    }
+
+    /* animated glow orbs */
+    .hero-glow {
+      position:      absolute;
+      border-radius: 50%;
+      filter:        blur(80px);
+      pointer-events: none;
+    }
+
+    .hero-glow-1 {
+      width:      500px;
+      height:     500px;
+      background: radial-gradient(circle, rgba(255,98,0,0.12) 0%, transparent 70%);
+      top:        -100px;
+      left:       -100px;
+      animation:  orb1 12s ease-in-out infinite alternate;
+    }
+
+    .hero-glow-2 {
+      width:      400px;
+      height:     400px;
+      background: radial-gradient(circle, rgba(255,98,0,0.08) 0%, transparent 70%);
+      bottom:     -80px;
+      right:      -80px;
+      animation:  orb2 15s ease-in-out infinite alternate;
+    }
+
+    @keyframes orb1 {
+      from { transform: translate(0, 0) scale(1);   }
+      to   { transform: translate(80px, 60px) scale(1.15); }
+    }
+    @keyframes orb2 {
+      from { transform: translate(0, 0) scale(1);   }
+      to   { transform: translate(-60px, -40px) scale(1.1); }
+    }
+
+    /* decorative hex accent */
+    .hero-hex {
+      position:   absolute;
+      right:      8%;
+      top:        50%;
+      transform:  translateY(-50%);
+      opacity:    0.04;
+      font-family: var(--display);
+      font-size:  clamp(14rem, 22vw, 26rem);
+      letter-spacing: -0.05em;
+      color:      var(--accent);
+      user-select: none;
+      pointer-events: none;
+      line-height: 1;
+      animation:  hexPulse 6s ease-in-out infinite;
+    }
+
+    @keyframes hexPulse {
+      0%,100% { opacity: 0.04; }
+      50%      { opacity: 0.07; }
+    }
+
+    .hero-content {
+      position:    relative;
+      z-index:     2;
+      text-align:  center;
+      padding:     60px 24px 80px;
+      max-width:   860px;
     }
 
     .hero-eyebrow {
@@ -61,40 +109,47 @@
       letter-spacing: 0.32em;
       text-transform: uppercase;
       color:          var(--accent);
-      margin-bottom:  20px;
+      margin-bottom:  24px;
+      opacity:        0;
+      animation:      fadeUp 0.7s ease forwards 0.1s;
     }
 
-    .hero-overlay h1 {
+    .hero-content h1 {
       font-family:    var(--display);
       font-size:      clamp(3.2rem, 8vw, 7.5rem);
       line-height:    0.92;
       letter-spacing: 0.04em;
-      max-width:      900px;
+      opacity:        0;
+      animation:      fadeUp 0.7s ease forwards 0.3s;
     }
 
-    .hero-overlay h1 .accent-line { color: var(--accent); }
+    .hero-content h1 .accent-line { color: var(--accent); }
 
     .hero-sub {
       font-size:      clamp(0.82rem, 2vw, 0.95rem);
       color:          var(--text-muted);
       max-width:      520px;
-      margin-top:     20px;
+      margin:         24px auto 0;
       line-height:    1.8;
       letter-spacing: 0.04em;
+      opacity:        0;
+      animation:      fadeUp 0.7s ease forwards 0.5s;
     }
 
     .hero-actions {
       display:         flex;
       gap:             12px;
-      margin-top:      36px;
+      margin-top:      40px;
       flex-wrap:       wrap;
       justify-content: center;
+      opacity:         0;
+      animation:       fadeUp 0.7s ease forwards 0.7s;
     }
 
     /* scroll hint */
     .scroll-hint {
       position:       absolute;
-      bottom:         24px;
+      bottom:         28px;
       left:           50%;
       transform:      translateX(-50%);
       z-index:        3;
@@ -103,6 +158,8 @@
       align-items:    center;
       gap:            6px;
       pointer-events: none;
+      opacity:        0;
+      animation:      fadeUp 0.7s ease forwards 1.1s;
     }
     .scroll-hint span {
       font-size:      0.52rem;
@@ -121,10 +178,34 @@
       50%      { opacity: 1;   }
     }
 
-    /* stats bar below the hero scroll section */
+    /* ── Scroll-reveal base ── */
+    [data-reveal] {
+      opacity:    0;
+      transform:  translateY(28px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    [data-reveal].revealed {
+      opacity:   1;
+      transform: translateY(0);
+    }
+
+    /* staggered children */
+    [data-reveal-stagger] > * {
+      opacity:    0;
+      transform:  translateY(28px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    [data-reveal-stagger].revealed > *:nth-child(1) { transition-delay: 0s;    opacity: 1; transform: translateY(0); }
+    [data-reveal-stagger].revealed > *:nth-child(2) { transition-delay: 0.08s; opacity: 1; transform: translateY(0); }
+    [data-reveal-stagger].revealed > *:nth-child(3) { transition-delay: 0.16s; opacity: 1; transform: translateY(0); }
+    [data-reveal-stagger].revealed > *:nth-child(4) { transition-delay: 0.24s; opacity: 1; transform: translateY(0); }
+    [data-reveal-stagger].revealed > *:nth-child(5) { transition-delay: 0.32s; opacity: 1; transform: translateY(0); }
+    [data-reveal-stagger].revealed > *:nth-child(6) { transition-delay: 0.40s; opacity: 1; transform: translateY(0); }
+
+    /* ── Stats bar ── */
     .stats-bar {
-      display:    flex;
-      flex-wrap:  wrap;
+      display:   flex;
+      flex-wrap: wrap;
     }
     .stats-bar .stat-item {
       flex:         1;
@@ -167,7 +248,9 @@
       background: var(--surface);
       padding:    40px 32px;
       position:   relative;
+      transition: background 0.2s;
     }
+    .step:hover { background: var(--surface2); }
 
     .step-num {
       font-family:    var(--display);
@@ -187,10 +270,7 @@
 
     .step p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.8; }
 
-    .step-icon {
-      font-size:     2rem;
-      margin-bottom: 16px;
-    }
+    .step-icon { font-size: 2rem; margin-bottom: 16px; }
 
     @media (max-width: 760px) {
       .steps-grid { grid-template-columns: 1fr; }
@@ -209,13 +289,13 @@
       background:  var(--surface);
       border:      1px solid var(--border);
       padding:     28px 22px;
-      transition:  all 0.2s;
+      transition:  border-color 0.2s, background 0.2s, transform 0.2s;
       cursor:      default;
     }
-
     .mat-card:hover {
       border-color: var(--accent);
       background:   var(--accent-dim);
+      transform:    translateY(-3px);
     }
 
     .mat-card .mat-abbr {
@@ -236,9 +316,9 @@
     }
 
     .mat-card .mat-desc {
-      font-size:   0.76rem;
-      color:       var(--text-muted);
-      line-height: 1.7;
+      font-size:     0.76rem;
+      color:         var(--text-muted);
+      line-height:   1.7;
       margin-bottom: 16px;
     }
 
@@ -272,14 +352,16 @@
     }
 
     .feature-card {
-      padding: 28px 24px;
-      border:  1px solid var(--border);
+      padding:    28px 24px;
+      border:     1px solid var(--border);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      background:   var(--accent-dim);
     }
 
-    .feature-icon {
-      font-size:     1.8rem;
-      margin-bottom: 14px;
-    }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 14px; }
 
     .feature-card h3 {
       font-family:    var(--display);
@@ -348,6 +430,12 @@
       background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
       border: none;
     }
+
+    /* shared entrance animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
   </style>
 </head>
 <body>
@@ -357,31 +445,33 @@
 
 <main>
 
-  <!-- ── Hero (200vh scroll room; Three.js viewer behind text) ───────────── -->
-  <div class="hero-scroll" id="heroScroll">
-    <div class="hero-frame" id="heroFrame">
-      <canvas id="heroCanvas" aria-hidden="true"></canvas>
-      <div class="hero-overlay" id="heroOverlay">
-        <p class="hero-eyebrow">&#x2B22; Professional FDM 3D Printing</p>
-        <h1>PRECISION<br><span class="accent-line">3D PRINTS</span><br>ON DEMAND</h1>
-        <p class="hero-sub">
-          Upload your STL file, configure your print, and get an instant quote.
-          We print and ship within days — straight to your door.
-        </p>
-        <div class="hero-actions">
-          <a href="quote.html" class="btn btn-primary btn-lg">GET INSTANT QUOTE &rarr;</a>
-          <a href="faq.html" class="btn btn-outline btn-lg">HOW IT WORKS</a>
-        </div>
+  <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+  <div class="hero">
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+    <div class="hero-hex" aria-hidden="true">&#x2B22;</div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">&#x2B22; Professional FDM 3D Printing</p>
+      <h1>PRECISION<br><span class="accent-line">3D PRINTS</span><br>ON DEMAND</h1>
+      <p class="hero-sub">
+        Upload your STL file, configure your print, and get an instant quote.
+        We print and ship within days — straight to your door.
+      </p>
+      <div class="hero-actions">
+        <a href="quote.html" class="btn btn-primary btn-lg">GET INSTANT QUOTE &rarr;</a>
+        <a href="faq.html" class="btn btn-outline btn-lg">HOW IT WORKS</a>
       </div>
-      <div class="scroll-hint" id="scrollHint" aria-hidden="true">
-        <span>Scroll</span>
-        <div class="arrow"></div>
-      </div>
+    </div>
+
+    <div class="scroll-hint" aria-hidden="true">
+      <span>Scroll</span>
+      <div class="arrow"></div>
     </div>
   </div>
 
   <!-- ── Stats bar ──────────────────────────────────────────────────────── -->
-  <div class="stats-bar">
+  <div class="stats-bar" data-reveal-stagger>
     <div class="stat-item">
       <div class="stat-num">4</div>
       <div class="stat-label">Materials</div>
@@ -402,14 +492,14 @@
 
   <hr class="section-divider">
 
-  <!-- ── How It Works ──────────────────────────────────────────────────────── -->
+  <!-- ── How It Works ───────────────────────────────────────────────────── -->
   <section class="page-section" aria-labelledby="how-heading">
-    <div class="section-header">
+    <div class="section-header" data-reveal>
       <p class="eyebrow">// Simple Process</p>
       <h2 id="how-heading">HOW IT WORKS</h2>
       <p>From file upload to finished part — in three simple steps.</p>
     </div>
-    <div class="steps-grid">
+    <div class="steps-grid" data-reveal-stagger>
       <div class="step">
         <div class="step-num">01</div>
         <div class="step-icon">&#x2B22;</div>
@@ -444,14 +534,14 @@
 
   <hr class="section-divider">
 
-  <!-- ── Materials ─────────────────────────────────────────────────────────── -->
+  <!-- ── Materials ─────────────────────────────────────────────────────── -->
   <section class="page-section bg-surface" aria-labelledby="materials-heading">
-    <div class="section-header">
+    <div class="section-header" data-reveal>
       <p class="eyebrow">// Print Materials</p>
       <h2 id="materials-heading">CHOOSE YOUR MATERIAL</h2>
       <p>Four high-quality filaments to suit every application and budget.</p>
     </div>
-    <div class="materials-grid">
+    <div class="materials-grid" data-reveal-stagger>
       <div class="mat-card">
         <div class="mat-abbr">PLA</div>
         <div class="mat-name">Polylactic Acid</div>
@@ -489,21 +579,21 @@
         <div class="mat-price">from £0.10 <span>/ cm³ material</span></div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:36px">
+    <div style="text-align:center;margin-top:36px" data-reveal>
       <a href="quote.html" class="btn btn-primary">CONFIGURE YOUR PRINT &rarr;</a>
     </div>
   </section>
 
   <hr class="section-divider">
 
-  <!-- ── Features ──────────────────────────────────────────────────────────── -->
+  <!-- ── Features ──────────────────────────────────────────────────────── -->
   <section class="page-section" aria-labelledby="features-heading">
-    <div class="section-header">
+    <div class="section-header" data-reveal>
       <p class="eyebrow">// Why Choose Us</p>
       <h2 id="features-heading">BUILT FOR MAKERS</h2>
       <p>Everything you need, nothing you don't.</p>
     </div>
-    <div class="features-grid">
+    <div class="features-grid" data-reveal-stagger>
       <div class="feature-card">
         <div class="feature-icon">&#9889;</div>
         <h3>INSTANT QUOTES</h3>
@@ -557,9 +647,9 @@
 
   <hr class="section-divider">
 
-  <!-- ── CTA ───────────────────────────────────────────────────────────────── -->
+  <!-- ── CTA ───────────────────────────────────────────────────────────── -->
   <section class="page-section-sm" aria-label="Call to action">
-    <div class="cta-banner">
+    <div class="cta-banner" data-reveal>
       <h2>READY TO PRINT?</h2>
       <p>
         Upload your STL, configure your settings, and get a fully itemised
@@ -577,125 +667,24 @@
 <!-- Footer -->
 <div id="footer-mount"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/nav.js"></script>
 <script>
 'use strict';
 
-/* ── Three.js viewer ─────────────────────────────────────────────────────── */
-const NAV_H      = 56;
-const heroScroll  = document.getElementById('heroScroll');
-const heroFrame   = document.getElementById('heroFrame');
-const heroOverlay = document.getElementById('heroOverlay');
-const scrollHint  = document.getElementById('scrollHint');
-const heroCanvas  = document.getElementById('heroCanvas');
+/* ── Scroll-reveal via IntersectionObserver ──────────────────────────────── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('revealed');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
 
-const renderer = new THREE.WebGLRenderer({ canvas: heroCanvas, antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x0d0d0d, 1);
-
-const scene  = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 50000);
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-sun.position.set(2, 4, 3);
-scene.add(sun);
-const rim = new THREE.DirectionalLight(0xff6200, 0.5);
-rim.position.set(-3, -1, -2);
-scene.add(rim);
-scene.add(new THREE.GridHelper(400, 30, 0x333333, 0x1e1e1e));
-
-/* Rotating demo model */
-const demoMesh = new THREE.Mesh(
-  new THREE.TorusKnotGeometry(55, 18, 128, 24, 2, 3),
-  new THREE.MeshStandardMaterial({ color: 0xff6200, roughness: 0.45, metalness: 0.1 })
-);
-scene.add(demoMesh);
-
-let sph = { theta: 0.5, phi: 1.1, r: 320 };
-function applyCamera() {
-  camera.position.set(
-    sph.r * Math.sin(sph.phi) * Math.sin(sph.theta),
-    sph.r * Math.cos(sph.phi),
-    sph.r * Math.sin(sph.phi) * Math.cos(sph.theta)
-  );
-  camera.lookAt(0, 0, 0);
-}
-applyCamera();
-
-/* Orbit controls */
-let dragging = false, prev = { x: 0, y: 0 };
-heroCanvas.addEventListener('mousedown', e => { dragging = true; prev = { x: e.clientX, y: e.clientY }; e.preventDefault(); });
-window.addEventListener('mouseup', () => { dragging = false; });
-window.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  sph.theta -= (e.clientX - prev.x) * 0.006;
-  sph.phi    = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (e.clientY - prev.y) * 0.006));
-  prev = { x: e.clientX, y: e.clientY };
-  applyCamera();
+document.querySelectorAll('[data-reveal], [data-reveal-stagger]').forEach(el => {
+  observer.observe(el);
 });
-heroCanvas.addEventListener('wheel', e => {
-  sph.r = Math.max(sph.r * 0.05, Math.min(sph.r * 20, sph.r * (1 + e.deltaY * 0.001)));
-  applyCamera();
-  e.preventDefault();
-}, { passive: false });
-let lt = null;
-heroCanvas.addEventListener('touchstart', e => { lt = e.touches[0]; e.preventDefault(); }, { passive: false });
-heroCanvas.addEventListener('touchmove', e => {
-  if (!lt) return;
-  const t = e.touches[0];
-  sph.theta -= (t.clientX - lt.clientX) * 0.006;
-  sph.phi    = Math.max(0.08, Math.min(Math.PI - 0.08, sph.phi + (t.clientY - lt.clientY) * 0.006));
-  lt = t;
-  applyCamera();
-  e.preventDefault();
-}, { passive: false });
-
-/* Render loop */
-(function animate() {
-  requestAnimationFrame(animate);
-  demoMesh.rotation.y += 0.004;
-  demoMesh.rotation.x += 0.001;
-  const w = heroFrame.clientWidth, h = heroFrame.clientHeight;
-  if (renderer.domElement.width !== w || renderer.domElement.height !== h) {
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }
-  renderer.render(scene, camera);
-})();
-
-/* ── Scroll: pin frame, fade overlay ────────────────────────────────────── */
-function syncHero() {
-  const scrollY    = window.scrollY;
-  const sectionTop = heroScroll.getBoundingClientRect().top + scrollY;
-  const maxScroll  = heroScroll.offsetHeight - window.innerHeight; // ~100vh
-
-  /* pin frame to viewport while inside the section, then release */
-  if (scrollY >= sectionTop + maxScroll) {
-    heroFrame.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:calc(100vh - ' + NAV_H + 'px);overflow:hidden;';
-  } else {
-    heroFrame.style.cssText = 'position:fixed;top:' + NAV_H + 'px;left:0;right:0;height:calc(100vh - ' + NAV_H + 'px);overflow:hidden;';
-  }
-
-  /* fade the text overlay: starts immediately, done at 60% of scroll room */
-  const scrolled = Math.max(0, scrollY - sectionTop);
-  const fade     = Math.min(1, (scrolled / maxScroll) / 0.6);
-
-  heroOverlay.style.opacity       = 1 - fade;
-  heroOverlay.style.transform     = 'translateY(' + (-fade * 20) + 'px)';
-  heroOverlay.style.pointerEvents = fade > 0.5 ? 'none' : 'auto';
-  scrollHint.style.opacity        = Math.max(0, 1 - fade * 4);
-}
-
-/* initialise frame as fixed */
-heroFrame.style.cssText = 'position:fixed;top:' + NAV_H + 'px;left:0;right:0;height:calc(100vh - ' + NAV_H + 'px);overflow:hidden;';
-
-window.addEventListener('scroll', syncHero, { passive: true });
-window.addEventListener('resize', syncHero, { passive: true });
-syncHero();
 </script>
 </body>
 </html>
