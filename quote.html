@@ -276,6 +276,69 @@
       box-shadow: 0 0 6px var(--accent);
     }
 
+    /* ── Slider number input ── */
+    .slider-num {
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      width: 44px;
+      text-align: right;
+      -moz-appearance: textfield;
+      padding: 0 2px;
+      cursor: text;
+    }
+
+    .slider-num:focus { outline: none; }
+
+    .slider-num::-webkit-outer-spin-button,
+    .slider-num::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .slider-unit { color: var(--accent); font-size: 0.9rem; }
+
+    /* ── Material Tabs ── */
+    .mat-tab-bar {
+      display: flex;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mat-tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      padding: 4px 12px 7px;
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+
+    .mat-tab-btn:hover { color: var(--text); }
+    .mat-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Notes ── */
+    .notes-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 8px 10px;
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.5;
+    }
+
+    .notes-textarea:focus { outline: none; border-color: var(--accent); }
+    .notes-textarea::placeholder { color: var(--muted); }
+
     /* ── Quote Box ── */
     .quote-box {
       background: var(--surface2);
@@ -862,19 +925,28 @@
 
       <div class="transform-row">
         <span class="transform-label">Rot X</span>
-        <span class="transform-val" id="rotXVal">0°</span>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="slider-num" id="rotXNum" min="0" max="359" value="0" style="width:40px">
+          <span class="slider-unit">°</span>
+        </div>
       </div>
       <input type="range" id="rotXSlider" min="0" max="359" value="0" style="margin-bottom:10px">
 
       <div class="transform-row">
         <span class="transform-label">Rot Y</span>
-        <span class="transform-val" id="rotYVal">0°</span>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="slider-num" id="rotYNum" min="0" max="359" value="0" style="width:40px">
+          <span class="slider-unit">°</span>
+        </div>
       </div>
       <input type="range" id="rotYSlider" min="0" max="359" value="0" style="margin-bottom:10px">
 
       <div class="transform-row">
         <span class="transform-label">Rot Z</span>
-        <span class="transform-val" id="rotZVal">0°</span>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="slider-num" id="rotZNum" min="0" max="359" value="0" style="width:40px">
+          <span class="slider-unit">°</span>
+        </div>
       </div>
       <input type="range" id="rotZSlider" min="0" max="359" value="0">
 
@@ -883,6 +955,10 @@
 
     <div class="section">
       <div class="section-label">03 Material</div>
+      <div class="mat-tab-bar">
+        <button class="mat-tab-btn active" data-tab="standard">STANDARD</button>
+        <button class="mat-tab-btn" data-tab="industrial">INDUSTRIAL</button>
+      </div>
       <div class="material-grid" id="matGrid">
         <button class="material-btn active" data-mat="PLA">
           <span class="mat-name">PLA</span>
@@ -897,13 +973,26 @@
           <span class="mat-name">TPU</span>
         </button>
       </div>
+      <div class="material-grid" id="matGridIndustrial" style="display:none">
+        <button class="material-btn" data-mat="ABS-GF25">
+          <span class="mat-name">ABS-GF25</span>
+          <span class="mat-price">Glass-filled</span>
+        </button>
+        <button class="material-btn" data-mat="PC-CF">
+          <span class="mat-name">PC-CF</span>
+          <span class="mat-price">Carbon-filled</span>
+        </button>
+      </div>
     </div>
 
     <div class="section">
       <div class="section-label">04 Infill</div>
       <div class="slider-row">
         <span class="slider-label">Infill density</span>
-        <span class="slider-val" id="infillVal">20%</span>
+        <div style="display:flex;align-items:center;gap:3px">
+          <input type="number" class="slider-num" id="infillNum" min="5" max="100" value="20">
+          <span class="slider-unit">%</span>
+        </div>
       </div>
       <input type="range" id="infillSlider" min="5" max="100" value="20">
     </div>
@@ -922,7 +1011,12 @@
     </div>
 
     <div class="section">
-      <div class="section-label">06 Quote</div>
+      <div class="section-label">06 Notes</div>
+      <textarea class="notes-textarea" id="notesInput" placeholder="Special requirements, colour, finish, tolerance…"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="section-label">07 Quote</div>
       <div id="quoteBox">
         <div class="quote-empty">Upload an STL to generate a quote</div>
       </div>
@@ -987,10 +1081,12 @@ let baseDims = null;          // unscaled bounding box in mm { x, y, z }
 let meshDisplayScale = 1;     // the 100/maxDim normalisation factor
 
 const materials = {
-  PLA:  { price: 0.05, density: 1.24 },
-  PETG: { price: 0.07, density: 1.27 },
-  ABS:  { price: 0.06, density: 1.05 },
-  TPU:  { price: 0.10, density: 1.21 },
+  PLA:      { price: 0.05, density: 1.24 },
+  PETG:     { price: 0.07, density: 1.27 },
+  ABS:      { price: 0.06, density: 1.05 },
+  TPU:      { price: 0.10, density: 1.21 },
+  'ABS-GF25': { price: 0.14, density: 1.40 },
+  'PC-CF':    { price: 0.20, density: 1.30 },
 };
 let currentMaterial = 'PLA';
 let infill = 0.20;
@@ -1309,12 +1405,10 @@ function loadModel(buffer) {
   userScale = 1.0;
   modelRotDeg = { x: 0, y: 0, z: 0 };
   document.getElementById('scaleInput').value = 100;
-  document.getElementById('rotXSlider').value = 0;
-  document.getElementById('rotYSlider').value = 0;
-  document.getElementById('rotZSlider').value = 0;
-  document.getElementById('rotXVal').textContent = '0°';
-  document.getElementById('rotYVal').textContent = '0°';
-  document.getElementById('rotZVal').textContent = '0°';
+  ['X','Y','Z'].forEach(ax => {
+    document.getElementById('rot' + ax + 'Slider').value = 0;
+    document.getElementById('rot' + ax + 'Num').value = 0;
+  });
 
   applyTransform();
 
@@ -1405,7 +1499,13 @@ document.getElementById('scaleInput').addEventListener('input', e => {
 ['X','Y','Z'].forEach(axis => {
   document.getElementById('rot' + axis + 'Slider').addEventListener('input', e => {
     modelRotDeg[axis.toLowerCase()] = +e.target.value;
-    document.getElementById('rot' + axis + 'Val').textContent = e.target.value + '°';
+    document.getElementById('rot' + axis + 'Num').value = e.target.value;
+    applyTransform();
+  });
+  document.getElementById('rot' + axis + 'Num').addEventListener('input', e => {
+    const v = ((parseInt(e.target.value) || 0) % 360 + 360) % 360;
+    modelRotDeg[axis.toLowerCase()] = v;
+    document.getElementById('rot' + axis + 'Slider').value = v;
     applyTransform();
   });
 });
@@ -1416,24 +1516,50 @@ document.getElementById('resetTransformBtn').addEventListener('click', () => {
   document.getElementById('scaleInput').value = 100;
   ['X','Y','Z'].forEach(axis => {
     document.getElementById('rot' + axis + 'Slider').value = 0;
-    document.getElementById('rot' + axis + 'Val').textContent = '0°';
+    document.getElementById('rot' + axis + 'Num').value = 0;
   });
   applyTransform();
 });
 
 // ─── UI Events ────────────────────────────────────────────────────────────────
-document.getElementById('matGrid').addEventListener('click', e => {
-  const btn = e.target.closest('.material-btn');
-  if (!btn) return;
+document.querySelector('.mat-tab-bar').addEventListener('click', e => {
+  const tab = e.target.closest('.mat-tab-btn');
+  if (!tab) return;
+  document.querySelectorAll('.mat-tab-btn').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  const industrial = tab.dataset.tab === 'industrial';
+  document.getElementById('matGrid').style.display = industrial ? 'none' : '';
+  document.getElementById('matGridIndustrial').style.display = industrial ? '' : 'none';
+  const firstBtn = industrial
+    ? document.querySelector('#matGridIndustrial .material-btn')
+    : document.querySelector('#matGrid .material-btn');
   document.querySelectorAll('.material-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentMaterial = btn.dataset.mat;
+  firstBtn.classList.add('active');
+  currentMaterial = firstBtn.dataset.mat;
   updateQuote();
+});
+
+['matGrid', 'matGridIndustrial'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.material-btn');
+    if (!btn) return;
+    document.querySelectorAll('.material-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMaterial = btn.dataset.mat;
+    updateQuote();
+  });
 });
 
 document.getElementById('infillSlider').addEventListener('input', e => {
   infill = e.target.value / 100;
-  document.getElementById('infillVal').textContent = e.target.value + '%';
+  document.getElementById('infillNum').value = e.target.value;
+  updateQuote();
+});
+
+document.getElementById('infillNum').addEventListener('input', e => {
+  const v = Math.max(5, Math.min(100, parseInt(e.target.value) || 5));
+  infill = v / 100;
+  document.getElementById('infillSlider').value = v;
   updateQuote();
 });
 
