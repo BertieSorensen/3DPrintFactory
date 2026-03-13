@@ -1,1 +1,4 @@
-{"node_modules":true,"uploads":true,"orders.db":true}
+node_modules/
+uploads/
+orders.db
+package-lock.json
