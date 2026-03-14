@@ -207,6 +207,76 @@
 
     .material-btn.active .mat-price { color: var(--accent); opacity: 0.7; }
 
+    /* ── Colour Selection ── */
+    .colour-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .colour-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: #bbb;
+      padding: 9px 10px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .colour-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .colour-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+      box-shadow: inset 0 0 12px var(--accent-dim);
+    }
+
+    .colour-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .colour-other-note {
+      font-size: 0.58rem;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      display: block;
+      margin-top: 1px;
+    }
+
+    .colour-custom-wrap {
+      display: none;
+      margin-top: 6px;
+    }
+
+    .colour-custom-wrap.visible { display: block; }
+
+    .colour-custom-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 7px 10px;
+      letter-spacing: 0.04em;
+    }
+
+    .colour-custom-input::placeholder { color: var(--muted); }
+    .colour-custom-input:focus { outline: none; border-color: var(--accent); }
+
     /* ── Infill Slider ── */
     .slider-row {
       display: flex;
@@ -986,7 +1056,29 @@
     </div>
 
     <div class="section">
-      <div class="section-label">04 Infill</div>
+      <div class="section-label">04 Colour</div>
+      <div class="colour-grid" id="colourGrid">
+        <button class="colour-btn active" data-colour="black">
+          <span class="colour-swatch" style="background:#1a1a1a"></span>BLACK
+        </button>
+        <button class="colour-btn" data-colour="grey">
+          <span class="colour-swatch" style="background:#888888"></span>GREY
+        </button>
+        <button class="colour-btn" data-colour="white">
+          <span class="colour-swatch" style="background:#eeeeee"></span>WHITE
+        </button>
+        <button class="colour-btn" data-colour="other">
+          <span class="colour-swatch" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"></span>
+          <span>OTHER<span class="colour-other-note">8× surcharge</span></span>
+        </button>
+      </div>
+      <div class="colour-custom-wrap" id="colourCustomWrap">
+        <input type="text" class="colour-custom-input" id="colourCustomInput" placeholder="Describe your colour (e.g. RAL 5015 Sky Blue)…" maxlength="120">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">05 Infill</div>
       <div class="slider-row">
         <span class="slider-label">Infill density</span>
         <div style="display:flex;align-items:center;gap:3px">
@@ -998,7 +1090,7 @@
     </div>
 
     <div class="section">
-      <div class="section-label">05 Quantity</div>
+      <div class="section-label">06 Quantity</div>
       <div class="slider-row">
         <span class="slider-label">Number of copies</span>
         <span class="slider-val" id="qtyVal">1</span>
@@ -1011,12 +1103,12 @@
     </div>
 
     <div class="section">
-      <div class="section-label">06 Notes</div>
+      <div class="section-label">07 Notes</div>
       <textarea class="notes-textarea" id="notesInput" placeholder="Special requirements, colour, finish, tolerance…"></textarea>
     </div>
 
     <div class="section">
-      <div class="section-label">07 Quote</div>
+      <div class="section-label">08 Quote</div>
       <div id="quoteBox">
         <div class="quote-empty">Upload an STL to generate a quote</div>
       </div>
@@ -1094,9 +1186,18 @@ const materials = {
   'PC-CF':    { price: 0.082, density: 1.30 },
 };
 let currentMaterial = 'PLA';
+let currentColour = 'black';
+let currentColourCustom = '';
 let infill = 0.20;
 let quantity = 1;
 let modelVolumeCm3 = null;
+
+const COLOUR_HEX = {
+  black: 0x1a1a1a,
+  grey:  0x888888,
+  white: 0xeeeeee,
+  other: 0xddddcc,
+};
 
 // ─── Delivery estimate ────────────────────────────────────────────────────────
 // Weight = effective material volume × density. Add 300g for packaging.
@@ -1375,9 +1476,9 @@ function loadModel(buffer) {
   geo.setAttribute('normal',   new THREE.BufferAttribute(nor, 3));
 
   const mat = new THREE.MeshPhongMaterial({
-    color: 0xddddcc,
-    specular: 0xff6200,
-    shininess: 40,
+    color: COLOUR_HEX[currentColour] ?? 0xddddcc,
+    specular: currentColour === 'black' ? 0x444444 : 0xff6200,
+    shininess: currentColour === 'white' ? 80 : currentColour === 'black' ? 20 : 40,
     side: THREE.DoubleSide,
   });
 
@@ -1430,6 +1531,19 @@ function loadModel(buffer) {
   updateQuote();
 }
 
+// ─── Colour ───────────────────────────────────────────────────────────────────
+function updateMeshColour() {
+  if (!currentMesh) return;
+  const hex = COLOUR_HEX[currentColour] ?? 0xddddcc;
+  currentMesh.material.color.setHex(hex);
+  currentMesh.material.specular.setHex(
+    currentColour === 'black' ? 0x444444 : 0xff6200
+  );
+  currentMesh.material.shininess =
+    currentColour === 'white' ? 80 : currentColour === 'black' ? 20 : 40;
+  currentMesh.material.needsUpdate = true;
+}
+
 // ─── Transform ────────────────────────────────────────────────────────────────
 function applyTransform() {
   if (!currentMesh || !baseDims) return;
@@ -1465,9 +1579,10 @@ function updateQuote() {
   const shell    = modelVolumeCm3 * 0.15;
   const interior = modelVolumeCm3 * 0.85;
   const effVol   = shell + interior * infill;
-  const matCost  = effVol * ppm * quantity;
+  const colourMult = currentColour === 'other' ? 8 : 1;
+  const matCost  = effVol * ppm * quantity * colourMult;
   const setup    = 2.50;
-  const supportCost = (effVol * ppm * quantity) * supportSurcharge;
+  const supportCost = (effVol * ppm * quantity * colourMult) * supportSurcharge;
   const delivery = deliveryEstimate(effVol * quantity, currentMaterial);
   const total    = matCost + supportCost + setup + delivery.cost;
 
@@ -1482,9 +1597,12 @@ function updateQuote() {
     : '';
 
   const qtyNote = quantity > 1 ? ` ×${quantity}` : '';
+  const colourLabel = currentColour === 'other' ? 'Custom colour' : currentColour.charAt(0).toUpperCase() + currentColour.slice(1);
+  const colourNote  = currentColour === 'other' ? ' <span style="color:var(--accent);font-size:0.6rem">(8× surcharge)</span>' : '';
 
   box.innerHTML = `
     <div class="quote-box">
+      <div class="quote-row"><span>Colour: ${colourLabel}${colourNote}</span></div>
       <div class="quote-row"><span>Materials (${currentMaterial}${qtyNote})</span><span>£${(matCost + supportCost).toFixed(2)}</span></div>
       <div class="quote-row"><span>Setup & delivery</span><span>£${(setup + delivery.cost).toFixed(2)}</span></div>
       <hr class="quote-divider">
@@ -1553,6 +1671,23 @@ document.querySelector('.mat-tab-bar').addEventListener('click', e => {
     currentMaterial = btn.dataset.mat;
     updateQuote();
   });
+});
+
+document.getElementById('colourGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.colour-btn');
+  if (!btn) return;
+  document.querySelectorAll('.colour-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentColour = btn.dataset.colour;
+  const wrap = document.getElementById('colourCustomWrap');
+  wrap.classList.toggle('visible', currentColour === 'other');
+  updateMeshColour();
+  updateQuote();
+});
+
+document.getElementById('colourCustomInput').addEventListener('input', e => {
+  currentColourCustom = e.target.value;
+  updateQuote();
 });
 
 document.getElementById('infillSlider').addEventListener('input', e => {
@@ -1629,15 +1764,20 @@ function getCurrentQuoteData() {
   const shell         = modelVolumeCm3 * 0.15;
   const interior      = modelVolumeCm3 * 0.85;
   const effVol        = shell + interior * infill;
-  const matCostPerUnit = effVol * ppm * (1 + supportSurcharge);
+  const colourMult    = currentColour === 'other' ? 8 : 1;
+  const matCostPerUnit = effVol * ppm * (1 + supportSurcharge) * colourMult;
   const supportLabel  = supportSurcharge === 0 ? 'None'
     : supportSurcharge < 0.10 ? 'Light'
     : supportSurcharge < 0.25 ? 'Moderate'
     : 'Heavy';
+  const colourLabel   = currentColour === 'other'
+    ? (currentColourCustom.trim() || 'Other (custom)')
+    : currentColour.charAt(0).toUpperCase() + currentColour.slice(1);
   return {
     name: currentFileName || 'model.stl',
     file: currentFile,
     material: currentMaterial,
+    colour: colourLabel,
     qty: quantity,
     infill: Math.round(infill * 100),
     supportLabel,
@@ -1678,7 +1818,7 @@ function renderCart() {
         <button class="cart-item-remove" data-remove="${item.id}" title="Remove">✕</button>
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-meta">
-          ${item.material} &nbsp;·&nbsp; ${item.infill}% infill &nbsp;·&nbsp; Supports: ${item.supportLabel}
+          ${item.material} &nbsp;·&nbsp; ${item.colour} &nbsp;·&nbsp; ${item.infill}% infill &nbsp;·&nbsp; Supports: ${item.supportLabel}
         </div>
         <div class="cart-item-footer">
           <div class="cart-item-qty">
@@ -1707,6 +1847,7 @@ document.getElementById('addToCartBtn').addEventListener('click', () => {
   const existing = cart.find(i =>
     i.name === data.name &&
     i.material === data.material &&
+    i.colour === data.colour &&
     i.infill === data.infill &&
     i.supportLabel === data.supportLabel
   );
